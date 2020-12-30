@@ -13,7 +13,7 @@ export default function ProgressBar(props: any) {
         }
     };
 
-    return <View style={[styles.container]}>
+    return (<View style={[styles.container]}>
         <LinearGradient
             colors={['#4b66ff', '#538dff']}
             start={[0.5, 0]}
@@ -24,6 +24,7 @@ export default function ProgressBar(props: any) {
             ]}
         />
     </View>
+    )
 
 }
 
