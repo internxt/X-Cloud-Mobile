@@ -14,6 +14,8 @@ import Forgot from './screens/Forgot';
 import OutOfSpace from './screens/OutOfSpace';
 import Storage from './screens/Storage';
 import StorageWebView from './screens/StorageWebView';
+import InAppPurchases from './screens/InAppPurchases';
+
 
 type RouteConfig = NavigationRouteConfigMap<StackNavigationOptions, StackNavigationProp<NavigationRoute<NavigationParams>, NavigationParams>, unknown>
 type NavigatorOptions = CreateNavigatorConfig<StackNavigationConfig, NavigationStackRouterConfig, StackNavigationOptions, StackNavigationProp<NavigationRoute<NavigationParams>, NavigationParams>>
@@ -28,7 +30,9 @@ const routeConfig: RouteConfig = {
   Forgot: { screen: Forgot },
   OutOfSpace: { screen: OutOfSpace },
   Storage: { screen: Storage },
-  StorageWebView: { screen: StorageWebView}
+  StorageWebView: { screen: StorageWebView },
+  InAppPurchases: { screen: InAppPurchases }
+
 };
 
 const navigatorOptions: NavigatorOptions = {
