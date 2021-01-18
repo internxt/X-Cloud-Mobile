@@ -127,19 +127,10 @@ function InAppPurchases(props: InAppPurchasesProps): JSX.Element {
     return xUserJson.lastname
   }
 
-  const getPurchaseHistory = () => {
-    const purchaseHistory = RNIap.getPurchaseHistory().then((res) => { return res})
-
-    return purchaseHistory
-  }
-
   useEffect(() => {
   }, [productChosen])
 
   useEffect(() => {
-    const e = getPurchaseHistory().then((res=>{
-      console.log('tiene comprado', res)
-    }))
 
     loadValues().then(values => {
       setUsageValues(values)
@@ -157,13 +148,14 @@ function InAppPurchases(props: InAppPurchasesProps): JSX.Element {
       console.log('error in cdm', err)
     }
 
-    purchaseUpdateSub = RNIap.purchaseUpdatedListener(
+    const purchaseUpdateSub = RNIap.purchaseUpdatedListener(
       async (
         purchase: RNIap.InAppPurchase | RNIap.SubscriptionPurchase | RNIap.ProductPurchase
       ) => {
         const receipt = purchase.transactionReceipt;
 
         console.log('RECIBO SUBSCRIPCION', receipt)
+
         if (receipt) {
           setIsSubscripted(true)
           const receiptPayLoad = {
@@ -173,6 +165,9 @@ function InAppPurchases(props: InAppPurchasesProps): JSX.Element {
           };
 
           console.log('RECEPT PAYLOAD', receiptPayLoad)
+          console.log('PURCHASES', receiptPayLoad.receipt.productId)
+          console.log('PURCHASES', receiptPayLoad.receipt.packageNameAndroid)
+          console.log('PURCHASES', receiptPayLoad.receipt.purchaseToken)
 
           try {
             const sendResult = '' //FETCH TO SERVER TO PASS THE RESULT
@@ -185,13 +180,15 @@ function InAppPurchases(props: InAppPurchasesProps): JSX.Element {
             throw new Error(e)
           }
         }
-        purchaseErrorSub = RNIap.purchaseErrorListener(
-          (error: RNIap.PurchaseError) => {
-            Alert.alert('Subscription error');
-          }
-        )
+
       }
     )
+    const purchaseErrorSub = RNIap.purchaseErrorListener(
+      (error: RNIap.PurchaseError) => {
+        console.warn('PurchaseErrorListener', error);
+      }
+    )
+
     return () => {
       if (purchaseUpdateSub) {
         purchaseUpdateSub.remove();
