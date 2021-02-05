@@ -7,6 +7,7 @@ import { analyticsSetup, loadEnvVars, loadFonts } from './src/helpers'
 import { NavigationContainer } from '@react-navigation/native';
 import { fileActions } from './src/redux/actions';
 import ReceiveSharingIntent from 'react-native-receive-sharing-intent';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function App(): JSX.Element {
   const [appInitialized, setAppInitialized] = useState(false);
@@ -83,6 +84,13 @@ export default function App(): JSX.Element {
       }, 'inxt' // share url protocol (must be unique to your app, suggest using your apple bundle id)
       )
     }
+    //AsyncStorage.removeItem('uploadedFiles')
+    AsyncStorage.getItem('uploadedFiles').then(res => {
+      console.log(res)
+      if (res === null) {
+        AsyncStorage.setItem('uploadedFiles', '[]')
+      }
+    })
     return () => {
       Linking.removeEventListener('url', handleOpenURL)
     }

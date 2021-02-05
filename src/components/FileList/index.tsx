@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useEffect, useState } from 'react'
 import { ScrollView, Text, RefreshControl, StyleSheet } from 'react-native';
 import { connect } from 'react-redux';
@@ -110,7 +111,7 @@ function FileList(props: any) {
         isEmptyFolder ?
           <EmptyFolder />
           :
-          <Text style={styles.dNone}></Text>
+          null
       }
 
       {

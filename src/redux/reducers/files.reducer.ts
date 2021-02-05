@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { IFile, IFolder, IUploadingFile } from '../../components/FileList';
 import { fileActionTypes } from '../constants';
 import { ArraySortFunction } from '../services';
@@ -51,6 +52,7 @@ export function filesReducer(state = initialState, action: any): FilesState {
       loading: true
     };
   case fileActionTypes.GET_FILES_SUCCESS:
+    console.log(action.payload)
     return {
       ...state,
       loading: false,
@@ -88,8 +90,8 @@ export function filesReducer(state = initialState, action: any): FilesState {
       loading: false,
       isUploading: false,
       isUploadingFileName: null,
-      filesCurrentlyUploading: state.filesCurrentlyUploading.filter(file => file.name !== action.payload),
-      filesAlreadyUploaded: state.filesAlreadyUploaded.filter(file => file.name !== action.payload)
+      filesCurrentlyUploading: state.filesCurrentlyUploading.filter(file => file.id !== action.payload),
+      filesAlreadyUploaded: state.filesAlreadyUploaded.filter(file => file.id !== action.payload)
     };
 
   case fileActionTypes.ADD_FILE_FAILURE:

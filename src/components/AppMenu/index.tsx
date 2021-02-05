@@ -89,7 +89,7 @@ function AppMenu(props: AppMenuProps) {
             // setHasSpace
 
           } else if (res.respInfo.status === 201) {
-            props.dispatch(fileActions.fetchIfSameFolder(result.currentFolder))
+            props.dispatch(fileActions.fetchIfSameFolder(result.currentFolder, result.id))
 
             analytics.track('file-upload-finished', { userId: userData.uuid, email: userData.email, device: 'mobile' }).catch(() => { })
 
@@ -97,7 +97,7 @@ function AppMenu(props: AppMenuProps) {
             Alert.alert('Error', 'Cannot upload file');
           }
 
-          props.dispatch(fileActions.uploadFileFinished(result.name))
+          props.dispatch(fileActions.uploadFileFinished(result.id))
           //props.dispatch(fileActions.removeUploadingFile(result.id))
         })
         .catch((err) => {
@@ -110,14 +110,14 @@ function AppMenu(props: AppMenuProps) {
           }
 
           props.dispatch(fileActions.uploadFileFailed())
-          props.dispatch(fileActions.uploadFileFinished(result.name))
+          props.dispatch(fileActions.uploadFileFinished(result.id))
           //props.dispatch(fileActions.removeUploadingFile(result.id))
         })
 
     } catch (error) {
       analytics.track('file-upload-error', { userId: userData.uuid, email: userData.email, device: 'mobile' }).catch(() => { })
       props.dispatch(fileActions.uploadFileFailed())
-      props.dispatch(fileActions.uploadFileFinished(result.name))
+      props.dispatch(fileActions.uploadFileFinished(result.id))
       console.log(error)
     }
   }

@@ -5,6 +5,7 @@ import { store } from '../../store';
 import { fileActionTypes } from '../constants';
 import { fileService } from '../services';
 import { userActions } from './user.actions';
+import AsyncStorage from '@react-native-async-storage/async-storage'
 
 export const fileActions = {
   downloadFileStart,
@@ -31,7 +32,6 @@ export const fileActions = {
   addUploadingFile,
   addUploadedFile,
   removeUploadingFile,
-  removeUploadedFile,
   fetchIfSameFolder
 };
 
@@ -64,15 +64,29 @@ function addUploadedFile(file: any) {
 }
 
 function removeUploadingFile(id: string) {
-  return { type: fileActionTypes.REMOVE_UPLOADING_FILE, payload: id };
+  const setFilesOnDeviceStorage = async () => {
+    const files = await AsyncStorage.getItem('uploadedFiles')
+
+    if (files) {
+      const parsedFiles = JSON.parse(files)
+      const file = store.getState().filesState.filesAlreadyUploaded.find(file => file.id.toString() === id)
+
+      if (file) {
+        parsedFiles.push(file)
+        await AsyncStorage.setItem('uploadedFiles', JSON.stringify(parsedFiles))
+      }
+      console.log('he in', parsedFiles)
+
+    }
+  }
+
+  setFilesOnDeviceStorage()
+
+  return { type: fileActionTypes.REMOVE_UPLOADING_FILE, payload: id }
 }
 
-function removeUploadedFile(file: any) {
-  return { type: fileActionTypes.REMOVE_UPLOADED_FILE, payload: file };
-}
-
-function uploadFileFinished(name: string) {
-  return { type: fileActionTypes.ADD_FILE_SUCCESS, payload: name };
+function uploadFileFinished(id: string) {
+  return { type: fileActionTypes.ADD_FILE_SUCCESS, payload: id };
 }
 
 function uploadFileFailed() {
@@ -89,17 +103,17 @@ function uploadFileSetUri(uri: string | undefined) {
   return { type: fileActionTypes.SET_FILE_UPLOAD_URI, payload: uri };
 }
 
-function fetchIfSameFolder(fileFolder: number) {
+function fetchIfSameFolder(fileFolder: number, fileId: number) {
   return (dispatch: Dispatch) => {
     const currentFoder = store.getState().filesState.folderContent.currentFolder
 
     if (fileFolder === currentFoder) {
-      dispatch(getFolderContent(currentFoder))
+      dispatch(getFolderContent(currentFoder, fileId))
     }
   }
 }
 
-function getFolderContent(folderId: string) {
+function getFolderContent(folderId: string, fileId?: number) {
   const id = parseInt(folderId)
 
   if (isNaN(id)) {
@@ -113,6 +127,24 @@ function getFolderContent(folderId: string) {
     fileService
       .getFolderContent(id)
       .then((data: any) => {
+        data.uploadedFiles = []
+        if (fileId) {
+          AsyncStorage.getItem('uploadedFiles').then(res => {
+            if (res) {
+              const parsedFiles = JSON.parse(res)
+              console.log('parsedFiles', parsedFiles)
+
+              data.uploadedFiles = parsedFiles
+              console.log('data.uploadedFiles', data.uploadedFiles)
+              const newFiles = parsedFiles.filter(file => file.id !== id)
+
+              if (newFiles) {
+                AsyncStorage.setItem('uploadedFiles', JSON.stringify(newFiles))
+              }
+              //console.log('he out lol', newFiles)
+            }
+          })
+        }
         data.currentFolder = id;
         dispatch(success(data));
       }).catch(error => {
