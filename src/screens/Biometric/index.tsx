@@ -27,10 +27,6 @@ function Biometric(props: any) {
   const [showConf, setShowConf] = useState(false)
   const [appState, setAppState] = useState(AppState.currentState);
 
-  const authOk = () => {
-    props.navigation.replace('FileExplorer', { rootFolderId });
-  }
-
   const start = async (setShowConf: React.Dispatch<React.SetStateAction<boolean>>) => {
     const showConfig = await shouldShowConfig()
 
@@ -44,7 +40,7 @@ function Biometric(props: any) {
         start(setShowConf);
       }
       if (result.success) {
-        authOk()
+        props.navigation.replace('FileExplorer', { rootFolderId })
       }
     }
   }
