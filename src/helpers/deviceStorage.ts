@@ -1,29 +1,27 @@
 import { AsyncStorage } from 'react-native';
 
 export const deviceStorage = {
-  async saveItem(key: string, value: any) {
+  async saveItem(key: string, value: any): Promise<void> {
     try {
       await AsyncStorage.setItem(key, value);
     } catch (error) {
-      console.log('AsyncStorage saveItem Error: ' + error.message);
     }
   },
-
-  async getItem(key: string) {
+  async getItem(key: string): Promise<string | null> {
     try {
       const value = await AsyncStorage.getItem(key);
+
       return value;
     } catch (error) {
-      console.log('AsyncStorage getItem Error: ' + error.message);
+      return null
     }
   },
-
-  async deleteItem(key: string) {
+  async deleteItem(key: string): Promise<void> {
     try {
       const value = await AsyncStorage.removeItem(key);
+
       return value;
     } catch (error) {
-      console.log('AsyncStorage deleteItem Error: ' + error.message);
     }
   }
 };

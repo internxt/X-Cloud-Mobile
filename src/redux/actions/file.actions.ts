@@ -1,6 +1,7 @@
 import { Dispatch } from 'redux';
 import { getLyticsData } from '../../helpers';
 import analytics from '../../helpers/lytics';
+import { store } from '../../store';
 import { fileActionTypes } from '../constants';
 import { fileService } from '../services';
 import { userActions } from './user.actions';
@@ -13,6 +14,8 @@ export const fileActions = {
   uploadFileStart,
   uploadFileFinished,
   uploadFileFailed,
+  uploadFileSetProgress,
+  uploadFileSetUri,
   getFolderContent,
   selectFile,
   deselectFile,
@@ -22,7 +25,14 @@ export const fileActions = {
   setSearchString,
   createFolder,
   updateFolderMetadata,
-  moveFile
+  moveFile,
+  setRootFolderContent,
+  setUri,
+  addUploadingFile,
+  addUploadedFile,
+  removeUploadingFile,
+  removeUploadedFile,
+  fetchIfSameFolder
 };
 
 function downloadFileStart(fileId: string) {
@@ -41,20 +51,57 @@ function downloadSelectedFileStop() {
   return { type: fileActionTypes.DOWNLOAD_SELECTED_FILE_STOP };
 }
 
-function uploadFileStart(fileName: string) {
-  return { type: fileActionTypes.ADD_FILE_REQUEST, payload: fileName };
+function uploadFileStart() {
+  return { type: fileActionTypes.ADD_FILE_REQUEST };
 }
 
-function uploadFileFinished() {
-  return { type: fileActionTypes.ADD_FILE_SUCCESS };
+function addUploadingFile(file: any) {
+  return { type: fileActionTypes.ADD_UPLOADING_FILE, payload: file };
+}
+
+function addUploadedFile(file: any) {
+  return { type: fileActionTypes.ADD_UPLOADED_FILE, payload: file };
+}
+
+function removeUploadingFile(id: string) {
+  return { type: fileActionTypes.REMOVE_UPLOADING_FILE, payload: id };
+}
+
+function removeUploadedFile(file: any) {
+  return { type: fileActionTypes.REMOVE_UPLOADED_FILE, payload: file };
+}
+
+function uploadFileFinished(name: string) {
+  return { type: fileActionTypes.ADD_FILE_SUCCESS, payload: name };
 }
 
 function uploadFileFailed() {
   return { type: fileActionTypes.ADD_FILE_FAILURE };
 }
 
+function uploadFileSetProgress(progress: number, id: string) {
+  const payload = { progress, id }
+
+  return { type: fileActionTypes.ADD_FILE_UPLOAD_PROGRESS, payload };
+}
+
+function uploadFileSetUri(uri: string | undefined) {
+  return { type: fileActionTypes.SET_FILE_UPLOAD_URI, payload: uri };
+}
+
+function fetchIfSameFolder(fileFolder: number) {
+  return (dispatch: Dispatch) => {
+    const currentFoder = store.getState().filesState.folderContent.currentFolder
+
+    if (fileFolder === currentFoder) {
+      dispatch(getFolderContent(currentFoder))
+    }
+  }
+}
+
 function getFolderContent(folderId: string) {
-  const id = parseInt(folderId);
+  const id = parseInt(folderId)
+
   if (isNaN(id)) {
     return (dispatch: Dispatch) => {
       dispatch(failure(`Folder ID: "${folderId}" is not a number.`));
@@ -98,7 +145,7 @@ function deleteItems(items, folderToReload) {
           dispatch(getFolderContent(folderToReload));
         }, 1000);
       })
-      .catch(err => {
+      .catch(() => {
         dispatch(requestFailure());
         setTimeout(() => {
           dispatch(getFolderContent(folderToReload));
@@ -138,7 +185,8 @@ function deselectAll() {
 }
 
 function setSortFunction(sortType) {
-  let sortFunc = fileService.getSortFunction(sortType);
+  const sortFunc = fileService.getSortFunction(sortType);
+
   return (dispatch: Dispatch) => {
     dispatch({
       type: fileActionTypes.SET_SORT_TYPE,
@@ -166,7 +214,6 @@ function createFolder(parentFolderId: number, newFolderName: string) {
         dispatch(getFolderContent(parentFolderId + ''))
       },
       error => {
-        console.log('Error creating folder', error);
         dispatch(failure(error));
       }
     );
@@ -178,6 +225,7 @@ function createFolder(parentFolderId: number, newFolderName: string) {
   function success(newFolderDetails: any) {
     (async () => {
       const userData = await getLyticsData()
+
       analytics.track('folder-created', {
         userId: userData.uuid,
         platform: 'mobile',
@@ -202,7 +250,6 @@ function moveFile(fileId: string, destination: string) {
       if (result === 1) {
         dispatch(success());
       } else {
-        console.error('Error creating folder', result);
         dispatch(failure(result));
       }
     });
@@ -219,6 +266,24 @@ function moveFile(fileId: string, destination: string) {
   }
 }
 
+function setRootFolderContent(folderContent: any) {
+  return { type: fileActionTypes.SET_ROOTFOLDER_CONTENT, payload: folderContent }
+}
+
+function setUri(uri: string | Record<string, string> | undefined | null) {
+  if (uri) {
+    getLyticsData().then(user => {
+      analytics.track('share-to', {
+        email: user.email,
+        uri: uri.fileUri ? uri.fileUri : uri.toString && uri.toString()
+      }).catch(() => {
+      });
+    }).catch(() => {
+    });
+  }
+  return { type: fileActionTypes.SET_URI, payload: uri }
+}
+
 function updateFolderMetadata(metadata: any, folderId) {
   return (dispatch: Dispatch) => {
     dispatch(request());
@@ -229,10 +294,6 @@ function updateFolderMetadata(metadata: any, folderId) {
         dispatch(success());
       })
       .catch(error => {
-        console.error(
-          `Error updating metadata on folder (${parentFolderId}): `,
-          error
-        );
         dispatch(failure(error));
       });
   };

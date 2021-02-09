@@ -1,11 +1,10 @@
 import React, { ReactNode } from 'react'
-import { View, Text, Image, StyleSheet, ListRenderItemInfo } from 'react-native'
+import { View, Text, Image, StyleSheet } from 'react-native'
 import AppIntroSlider from 'react-native-app-intro-slider';
 import { TouchableHighlight } from 'react-native-gesture-handler';
 import { connect } from 'react-redux';
 import { normalize } from '../../helpers';
 import B from '../../components/Bold'
-
 interface IntroProps {
   onFinish: () => void
   navigation?: any
@@ -72,8 +71,8 @@ function renderItem({ item }: any) {
 function renderNextButton(): ReactNode {
   return (
     <TouchableHighlight style={styles.buttonSkip}
-        activeOpacity={1}
-        underlayColor="#007aff">
+      activeOpacity={1}
+      underlayColor="#007aff">
       <Text style={styles.buttonSkipText}>Next</Text>
     </TouchableHighlight>
   );
@@ -89,9 +88,7 @@ function renderDoneButton() {
   );
 }
 
-
-
-function Intro(props: IntroProps) {
+function Intro(props: IntroProps): JSX.Element {
   return <AppIntroSlider
     data={slides}
     renderItem={renderItem}

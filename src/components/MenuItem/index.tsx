@@ -1,5 +1,5 @@
 import React from 'react'
-import { Image, Text, View, StyleSheet } from 'react-native'
+import { Image, StyleSheet } from 'react-native'
 import { TouchableHighlight } from 'react-native-gesture-handler';
 import { connect } from 'react-redux';
 import { getIcon } from '../../helpers/getIcon';
@@ -12,10 +12,11 @@ interface MenuItemProps {
 
 function MenuItem(props: MenuItemProps) {
   const imageSource = getIcon(props.name)
+
   return <TouchableHighlight
     underlayColor="#fff"
     onPress={props.onClickHandler}
-    style={[styles.button, props.style ? {...props.style} : {}]}>
+    style={[styles.button, props.style ? { ...props.style } : {}]}>
     <Image
       style={styles.icon}
       source={imageSource} />
@@ -27,11 +28,6 @@ const mapStateToProps = (state: any) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    justifyContent: 'center',
-    backgroundColor: '#fff',
-    marginRight: 10
-  },
   button: {
     display: 'flex',
     alignItems: 'center',
@@ -47,6 +43,5 @@ const styles = StyleSheet.create({
     resizeMode: 'contain'
   }
 });
-
 
 export default connect(mapStateToProps)(MenuItem);

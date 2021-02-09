@@ -1,64 +1,45 @@
-import { authenticateAsync } from 'expo-local-authentication';
 import React, { useEffect } from 'react'
-import { useState } from "react";
-import { Image, View, Text, KeyboardAvoidingView, StyleSheet, Alert } from "react-native";
-import { TextInput, TouchableHighlight } from "react-native-gesture-handler";
+import { useState } from 'react';
+import { Image, View, Text, KeyboardAvoidingView, StyleSheet, Alert } from 'react-native';
+import { TextInput, TouchableHighlight } from 'react-native-gesture-handler';
 import { connect } from 'react-redux';
-import { decryptTextWithKey, deviceStorage } from '../../helpers';
+import { deviceStorage } from '../../helpers';
 import analytics from '../../helpers/lytics';
 import { normalize } from '../../helpers/normalize'
 import { userActions } from '../../redux/actions';
+import { Reducers } from '../../redux/reducers/reducers';
 import { validate2FA, apiLogin } from './access';
-import * as Linking from 'expo-linking';
-
-interface LoginProps {
+interface LoginProps extends Reducers {
   goToForm?: (screenName: string) => void
-  authenticationState?: any
   dispatch?: any
   navigation?: any
 }
 
-function Login(props: LoginProps) {
+function Login(props: LoginProps): JSX.Element {
   const [isLoading, setIsLoading] = useState(true)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [twoFactorCode, setTwoFactorCode] = useState('')
   const [showTwoFactor, setShowTwoFactor] = useState(false)
-  const [secretKey, setSecretKey] = useState('')
-
-
-  const deepLink = async() => {
-    const url = await Linking.getInitialURL();
-    const res = url
-    if( url!= null) {
-      return res
-    }
-  }
-
-  deepLink().then((res) => {
-    //console.log('entro aqui') DEEPLINK
-  }).catch((err) =>{
-    console.log('error',err)
-
-  })
-
 
   useEffect(() => {
-    console.log('-------- Login AUTHENTICATION PROPS -------', props.authenticationState)
-    props.authenticationState.error ? Alert.alert('Your account is blocked', props.authenticationState.error) : null
-    
+    if (props.authenticationState.error) {
+      Alert.alert('Login error', props.authenticationState.error)
+    }
   }, [props.authenticationState])
 
   useEffect(() => {
     if (props.authenticationState.loggedIn === true) {
       const rootFolderId = props.authenticationState.user.root_folder_id;
-      props.navigation.replace('Biometric', {
+
+      props.navigation.replace('FileExplorer', {
         folderId: rootFolderId
       })
     } else {
       (async () => {
         const xToken = await deviceStorage.getItem('xToken')
         const xUser = await deviceStorage.getItem('xUser')
+
         if (xToken && xUser) {
           props.dispatch(userActions.localSignIn(xToken, xUser))
         } else {
@@ -68,11 +49,10 @@ function Login(props: LoginProps) {
     }
   }, [props.authenticationState.loggedIn, props.authenticationState.token])
 
-  return <KeyboardAvoidingView behavior="padding" style={styles.container}>
-    <View style={[styles.containerCentered, isLoading ? { opacity: 0.5 } : {}]}>
+  return <KeyboardAvoidingView behavior='height' style={styles.container}>
+    <View style={[styles.containerCentered, isLoading ? styles.halfOpacity : {}]}>
       <View style={styles.containerHeader}>
-        <View style={{ flexDirection: 'row' }}>
-          <Image style={styles.logo} source={require('../../../assets/images/logo.png')} />
+        <View style={styles.flexRow}>
           <Text style={styles.title}>Sign in to Internxt</Text>
         </View>
         <View style={styles.buttonWrapper}>
@@ -96,6 +76,7 @@ function Login(props: LoginProps) {
           <TextInput
             style={styles.input}
             value={email}
+            autoCapitalize={'none'}
             onChangeText={value => setEmail(value)}
             placeholder="Email address"
             placeholderTextColor="#666"
@@ -140,20 +121,17 @@ function Login(props: LoginProps) {
               if (userLoginData.tfa && !twoFactorCode) {
                 setShowTwoFactor(true)
               } else {
-                console.log('----------- Login FIRST ELSE ------------')
                 props.dispatch(userActions.signin(email, password, userLoginData.sKey, twoFactorCode))
               }
             }).catch(err => {
-              console.log('---- CATCH', err.message)
               analytics.track('user-signin-attempted', {
                 status: 'error',
                 message: err.message
               }).catch(() => { })
 
               Alert.alert(err.message)
-      
+
             }).finally(() => {
-              console.log('-------- Login INSIDE FINALLY --------')
               setIsLoading(false)
             })
           }}>
@@ -162,7 +140,7 @@ function Login(props: LoginProps) {
         <Text style={styles.forgotPasswordText} onPress={() => props.navigation.replace('Forgot')}>Forgot your password?</Text>
       </View>
     </View>
-    <Text style={styles.versionLabel}>Internxt Drive v1.2.0 (1)</Text>
+    <Text style={styles.versionLabel}>Internxt Drive v1.2.4</Text>
   </KeyboardAvoidingView>
 }
 
@@ -187,26 +165,13 @@ const styles = StyleSheet.create({
   },
   containerHeader: {
   },
-  logo: {
-    marginTop: normalize(59),
-    height: normalize(37),
-    width: normalize(28),
-    marginLeft: normalize(1)
-  },
   title: {
     fontFamily: 'CerebriSans-Bold',
     fontSize: normalize(22),
     letterSpacing: -1.7,
     color: '#000',
     marginBottom: normalize(30),
-    marginTop: normalize(64),
-    marginLeft: normalize(7)
-  },
-  subtitle: {
-    fontFamily: 'CerebriSans-Medium',
-    fontSize: normalize(22),
-    color: '#fff',
-    opacity: 0.76
+    marginTop: normalize(64)
   },
   buttonWrapper: {
     display: 'flex',
@@ -230,14 +195,11 @@ const styles = StyleSheet.create({
   buttonBlock: {
     width: '100%'
   },
-  buttonDisabled: {
-    backgroundColor: '#f2f2f2'
-  },
   buttonOn: {
-    backgroundColor: '#4585f5',
+    backgroundColor: '#4585f5'
   },
   buttonOff: {
-    backgroundColor: '#f2f2f2',
+    backgroundColor: '#f2f2f2'
   },
   buttonOnLabel: {
     fontFamily: 'CerebriSans-Medium',
@@ -250,13 +212,6 @@ const styles = StyleSheet.create({
     fontSize: normalize(15),
     textAlign: 'center',
     color: '#5c5c5c'
-  },
-  redirectMessage: {
-    fontFamily: 'CerebriSans-Medium',
-    fontSize: normalize(15),
-    letterSpacing: 0.3,
-    color: '#fff',
-    opacity: 0.6
   },
   input: {
     fontFamily: 'CerebriSans-Medium',
@@ -290,5 +245,11 @@ const styles = StyleSheet.create({
   forgotPasswordText: {
     marginTop: normalize(13),
     color: '#a4a4a4'
+  },
+  flexRow: {
+    flexDirection: 'row'
+  },
+  halfOpacity: {
+    opacity: 0.5
   }
 });

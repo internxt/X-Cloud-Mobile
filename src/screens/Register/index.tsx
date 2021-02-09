@@ -1,15 +1,15 @@
-import { isEmpty } from 'lodash';
-import React, { ReactElement, ReactNode, useEffect, useState } from 'react'
-import { View, Text, KeyboardAvoidingView, StyleSheet, Image, BackHandler, Alert } from "react-native";
+import React, { useEffect, useState } from 'react'
+import { View, Text, KeyboardAvoidingView, StyleSheet, Alert } from 'react-native';
 import { TextInput, TouchableHighlight } from 'react-native-gesture-handler';
-import { connect } from "react-redux";
-import { normalize } from '../../helpers';
+import { connect } from 'react-redux';
+import { deviceStorage, normalize } from '../../helpers';
 import analytics from '../../helpers/lytics';
+import { userActions } from '../../redux/actions';
 import Intro from '../Intro'
-import { validateEmail } from '../Login/access';
-import { doRegister, isNullOrEmpty, isStrongPassword, resendActivationEmail } from './registerUtils';
+import { apiLogin, validateEmail } from '../Login/access';
+import { doRegister, isNullOrEmpty, isStrongPassword } from './registerUtils';
 
-function Register(props: any): any {
+function Register(props: any): JSX.Element {
   const [registerStep, setRegisterStep] = useState(1);
   const [showIntro, setShowIntro] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
@@ -21,25 +21,45 @@ function Register(props: any): any {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [registerButtonClicked, setRegisterButtonClicked] = useState(false);
+  const twoFactorCode = ''
 
   const isValidEmail = validateEmail(email);
   const isValidFirstName = !isNullOrEmpty(firstName)
   const isValidLastName = !isNullOrEmpty(lastName)
+
+  useEffect(() => {
+    if (props.authenticationState.loggedIn === true) {
+      const rootFolderId = props.authenticationState.user.root_folder_id;
+
+      props.navigation.replace('FileExplorer', {
+        folderId: rootFolderId
+      })
+    } else {
+      (async () => {
+        const xToken = await deviceStorage.getItem('xToken')
+        const xUser = await deviceStorage.getItem('xUser')
+
+        if (xToken && xUser) {
+          props.dispatch(userActions.localSignIn(xToken, xUser))
+        } else {
+          setIsLoading(false)
+        }
+      })()
+    }
+  }, [props.authenticationState.loggedIn, props.authenticationState.token])
 
   if (showIntro) {
     return <Intro onFinish={() => setShowIntro(false)} />;
   }
 
   if (registerStep === 1) {
-
     const isValidStep = isValidFirstName && isValidLastName && isValidEmail;
 
     return (
       <KeyboardAvoidingView behavior="padding" style={styles.container}>
         <View style={styles.containerCentered}>
           <View style={styles.containerHeader}>
-            <View style={{ flexDirection: 'row' }}>
-              <Image style={styles.logo} source={require('../../../assets/images/logo.png')} />
+            <View style={styles.flexRow}>
               <Text style={styles.title}>Create an account</Text>
             </View>
 
@@ -115,68 +135,36 @@ function Register(props: any): any {
       <View style={styles.container}>
         <View style={styles.containerCentered}>
           <View style={styles.containerHeader}>
-            <View style={{ flexDirection: 'row' }}>
-              <Image
-                style={styles.logo}
-                source={require('../../../assets/images/logo.png')}
-              />
+            <View style={styles.flexRow}>
               <Text style={styles.title}>Internxt Security</Text>
             </View>
 
-
             <View>
               <Text
-                style={{
-                  fontSize: normalize(15),
-                  color: '#737880',
-                  fontFamily: 'CerebriSans-Regular',
-                  textAlign: 'justify',
-                  letterSpacing: -0.1,
-                  marginTop: -15
-                }}
+                style={styles.textDisclaimer}
               >
                 Internxt Drive uses your password to encrypt and decrypt your
-                files. Due to the secure nature of Internxt Drive, we don't
+                files. Due to the secure nature of Internxt Drive, we don&apos;t
                 know your password. That means that if you ever forget it,
-                your files are gone forever. With us, you're the only owner of
+                your files are gone forever. With us, you&apos;re the only owner of
                 your files. We strongly suggest you to:
-                </Text>
+              </Text>
             </View>
 
-            <View
-              style={{
-                backgroundColor: '#f7f7f7',
-                padding: normalize(23),
-                marginTop: normalize(30)
-              }}
-            >
-              <View style={{ flexDirection: 'row', marginBottom: 10 }}>
+            <View style={styles.textStorePasswordContainer}>
+              <View style={[styles.flexRow, { marginBottom: 10 }]}>
                 <Text>{'\u2022'}</Text>
                 <Text
-                  style={{
-                    flex: 1,
-                    paddingLeft: normalize(9),
-                    color: '#737880',
-                    fontSize: normalize(15),
-                    fontFamily: 'CerebriSans-Regular'
-                  }}
+                  style={styles.textStorePassword}
                 >
                   Store your Password. Keep it safe and secure.
-                  </Text>
+                </Text>
               </View>
-              <View style={{ flexDirection: 'row' }}>
+              <View style={styles.flexRow}>
                 <Text>{'\u2022'}</Text>
-                <Text
-                  style={{
-                    flex: 1,
-                    paddingLeft: normalize(9),
-                    color: '#737880',
-                    fontSize: normalize(15),
-                    fontFamily: 'CerebriSans-Regular'
-                  }}
-                >
+                <Text style={styles.textTip}>
                   Keep an offline backup of your password.
-                  </Text>
+                </Text>
               </View>
             </View>
 
@@ -210,14 +198,10 @@ function Register(props: any): any {
     const isValidStep = (password === confirmPassword) && isValidPassword;
 
     return (
-      <KeyboardAvoidingView behavior="padding" style={styles.container}>
-        <View style={[styles.containerCentered, isLoading ? { opacity: 0.5 } : {}]}>
+      <KeyboardAvoidingView behavior='height' style={styles.container}>
+        <View style={[styles.containerCentered, isLoading ? styles.halfOpacity : {}]}>
           <View style={styles.containerHeader}>
-            <View style={{ flexDirection: 'row' }}>
-              <Image
-                style={styles.logo}
-                source={require('../../../assets/images/logo.png')}
-              />
+            <View style={styles.flexRow}>
               <Text style={styles.title}>Create an account</Text>
             </View>
           </View>
@@ -258,7 +242,19 @@ function Register(props: any): any {
               <TouchableHighlight
                 style={[styles.button, styles.buttonOn, styles.buttonRight]}
                 underlayColor="#4585f5"
+                disabled={registerButtonClicked}
                 onPress={() => {
+                  if (!isValidPassword) {
+                    Alert.alert(
+                      '',
+                      'Please make sure your password contains at least six characters, a number, and a letter'
+                    );
+                    return
+                  }
+                  if (password !== confirmPassword) {
+                    Alert.alert('', 'Please make sure your passwords match');
+                    return
+                  }
                   if (registerButtonClicked || isLoading) {
                     return;
                   }
@@ -268,16 +264,29 @@ function Register(props: any): any {
                   doRegister({ firstName, lastName, email, password })
                     .then((userData) => {
                       analytics.identify(userData.uuid, { email }).catch(() => { })
-                      setRegisterStep(4)
+                      analytics.track('user-signup', {
+                        properties: {
+                          userId: userData.uuid,
+                          email: email,
+                          platform: 'mobile'
+                        }
+                      })
+                    })
+                    .then(() => {
+                      apiLogin(email).then(userLoginData => {
+                        props.dispatch(userActions.signin(email, password, userLoginData.sKey, twoFactorCode))
+
+                      })
                     }).catch(err => {
+                      analytics.track('user-signin-attempted', {
+                        status: 'error',
+                        message: err.message
+                      }).catch(() => { })
                       Alert.alert(err.message)
-                    }).finally(() => {
-                      setIsLoading(false)
-                      setRegisterButtonClicked(false)
                     })
                 }}
               >
-                <Text style={styles.buttonOnLabel}>{isLoading ? 'Creating your account...' : 'Continue'}</Text>
+                <Text style={styles.buttonOnLabel}>{registerButtonClicked ? 'Creating...' : 'Continue'}</Text>
               </TouchableHighlight>
             </View>
           </View>
@@ -285,83 +294,7 @@ function Register(props: any): any {
       </KeyboardAvoidingView>
     );
   }
-
-  if (registerStep === 4) {
-    return (
-      <View style={styles.container}>
-        <View style={styles.containerCentered}>
-          <View style={styles.containerHeader}>
-
-            <View style={{ flexDirection: 'row' }}>
-              <Image
-                style={styles.logo}
-                source={require('../../../assets/images/logo.png')}
-              />
-              <Text style={styles.title}>Activation Email</Text>
-            </View>
-
-            <View>
-              <Text
-                style={{
-                  fontSize: normalize(17),
-                  color: '#737880',
-                  fontFamily: 'CerebriSans-Regular',
-                  marginTop: -10
-                }}
-              >
-                Please check your email and follow the instructions to
-                activate your account so you can start using Internxt Drive.
-                </Text>
-            </View>
-
-            <View
-              style={{
-                backgroundColor: '#f7f7f7',
-                padding: normalize(23),
-                marginTop: normalize(30)
-              }}
-            >
-              <Text
-                style={{
-                  color: '#737880',
-                  fontSize: normalize(17),
-                  fontFamily: 'CerebriSans-Regular'
-                }}
-              >
-                By creating an account, you are agreeing to our Terms &amp;
-                Conditions and Privacy Policy.
-                </Text>
-            </View>
-
-            <View style={styles.buttonFooterWrapper}>
-              <TouchableHighlight
-                style={[styles.button, styles.buttonBlock, { marginTop: normalize(15) }]}
-                underlayColor="#4585f5" onPress={() => {
-                  setRegisterButtonClicked(true)
-                  setIsLoading(true)
-                  resendActivationEmail(email).then(() => {
-                    Alert.alert(`Activation email sent to ${email}`)
-                  }).catch(err => {
-                    Alert.alert(err.message)
-                  }).finally(() => {
-                    setRegisterButtonClicked(false)
-                    setIsLoading(false)
-                  })
-                }}>
-                <Text style={styles.buttonOnLabel}>Re-send activation email</Text>
-              </TouchableHighlight>
-              <TouchableHighlight
-                activeOpacity={1}
-                underlayColor="#ffffff"
-                onPress={() => props.navigation.replace('Login')}>
-                <Text style={styles.link}>Sign in</Text>
-              </TouchableHighlight>
-            </View>
-          </View>
-        </View>
-      </View>
-    );
-  }
+  return <></>;
 }
 
 const styles = StyleSheet.create({
@@ -380,26 +313,13 @@ const styles = StyleSheet.create({
   containerHeader: {
     borderWidth: 0
   },
-  logo: {
-    resizeMode: 'contain',
-    height: normalize(50),
-    width: normalize(37),
-    marginLeft: -7
-  },
   title: {
     fontFamily: 'CerebriSans-Bold',
     fontSize: normalize(22),
     letterSpacing: -1.7,
     color: '#000',
     marginBottom: normalize(30),
-    marginTop: normalize(12),
-    marginLeft: normalize(3)
-  },
-  subtitle: {
-    fontFamily: 'CerebriSans-Medium',
-    fontSize: normalize(22),
-    color: '#fff',
-    opacity: 0.76
+    marginTop: normalize(12)
   },
   buttonWrapper: {
     display: 'flex',
@@ -448,17 +368,10 @@ const styles = StyleSheet.create({
     color: '#5c5c5c'
   },
   buttonRight: {
-    marginLeft: normalize(10),
+    marginLeft: normalize(10)
   },
   buttonLeft: {
-    marginRight: normalize(10),
-  },
-  redirectMessage: {
-    fontFamily: 'CerebriSans-Medium',
-    fontSize: normalize(15),
-    letterSpacing: 0.3,
-    color: '#fff',
-    opacity: 0.6
+    marginRight: normalize(10)
   },
   input: {
     fontFamily: 'CerebriSans-Medium',
@@ -471,9 +384,6 @@ const styles = StyleSheet.create({
   showInputFieldsWrapper: {
     justifyContent: 'center'
   },
-  hideInputFieldWrapper: {
-    display: 'none'
-  },
   inputWrapper: {
     height: normalize(55),
     borderRadius: 5,
@@ -482,12 +392,38 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: normalize(15)
   },
-  link: {
+  flexRow: {
+    flexDirection: 'row'
+  },
+  textDisclaimer: {
+    fontSize: normalize(15),
+    color: '#737880',
     fontFamily: 'CerebriSans-Regular',
-    textAlign: 'center',
+    textAlign: 'justify',
+    letterSpacing: -0.1,
+    marginTop: -15
+  },
+  textStorePasswordContainer: {
+    backgroundColor: '#f7f7f7',
+    padding: normalize(23),
+    marginTop: normalize(30)
+  },
+  textStorePassword: {
+    flex: 1,
+    paddingLeft: normalize(9),
     color: '#737880',
     fontSize: normalize(15),
-    marginTop: normalize(10)
+    fontFamily: 'CerebriSans-Regular'
+  },
+  textTip: {
+    flex: 1,
+    paddingLeft: normalize(9),
+    color: '#737880',
+    fontSize: normalize(15),
+    fontFamily: 'CerebriSans-Regular'
+  },
+  halfOpacity: {
+    opacity: 0.5
   }
 });
 

@@ -7,7 +7,6 @@ import { ConfirmDialog } from 'react-native-simple-dialogs';
 import { authenticateAsync } from 'expo-local-authentication';
 import { deviceStorage } from '../../helpers';
 
-
 async function showBiometrics() {
   // SCAN 1
   const result = await authenticateAsync()
@@ -110,9 +109,3 @@ const styles = StyleSheet.create({
     justifyContent: 'center'
   }
 });
-
-
-
-
-
-
