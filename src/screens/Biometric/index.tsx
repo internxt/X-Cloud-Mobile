@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react'
 import { View, StyleSheet, ActivityIndicator, AppState, AppStateStatus } from 'react-native'
-import { useState } from "react";
+import { useState } from 'react';
 import { connect } from 'react-redux';
 import { checkDeviceForHardware, checkForBiometric, checkDeviceStorageShowConf, checkDeviceStorageBiometric, scanBiometrics, getBiometricConfiguration } from './BiometricUtils'
 import { ConfirmDialog } from 'react-native-simple-dialogs';
@@ -10,6 +10,7 @@ import { deviceStorage } from '../../helpers';
 async function showBiometrics() {
   // SCAN 1
   const result = await authenticateAsync()
+
   return result
 }
 
@@ -17,7 +18,7 @@ async function shouldShowConfig() {
   const checkHardware = await checkDeviceForHardware();
   const checkBiometrics = await checkForBiometric();
   const xBiometricValue = await getBiometricConfiguration();
-  console.log('VALUE', xBiometricValue)
+
   return checkHardware && checkBiometrics && xBiometricValue === null
 }
 
@@ -32,11 +33,13 @@ function Biometric(props: any) {
 
   const start = async (setShowConf: React.Dispatch<React.SetStateAction<boolean>>) => {
     const showConfig = await shouldShowConfig()
+
     if (showConfig) {
       setShowConf(true)
     } else if (!showConfig && await getBiometricConfiguration()) {
       // SCAN 2
       const result = await showBiometrics();
+
       if (!result.success && AppState.currentState === 'active') {
         start(setShowConf);
       }
@@ -49,7 +52,6 @@ function Biometric(props: any) {
   const handleStateChange = (e: AppStateStatus) => {
     setAppState(e)
   }
-  
 
   useEffect(() => {
     start(setShowConf)
@@ -72,7 +74,7 @@ function Biometric(props: any) {
         message="Do you want to config Biometric?"
         visible={showConf}
         positiveButton={{
-          title: "YES",
+          title: 'YES',
           onPress: () => {
             setShowConf(false)
             showBiometrics().then(result => {
@@ -86,7 +88,7 @@ function Biometric(props: any) {
           }
         }}
         negativeButton={{
-          title: "NO",
+          title: 'NO',
           onPress: () => {
             setShowConf(false)
           }
