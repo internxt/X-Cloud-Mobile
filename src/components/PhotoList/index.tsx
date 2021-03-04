@@ -1,15 +1,13 @@
 /* eslint-disable react-native/no-unused-styles */
 import React, { useEffect, useState } from 'react'
-import { StyleSheet, View, Image, Text, ScrollView, Dimensions } from 'react-native';
+import { StyleSheet, View, Image, Text, Dimensions } from 'react-native';
 import { FlatList, TouchableOpacity } from 'react-native-gesture-handler';
 import { connect } from 'react-redux';
 import { WaveIndicator } from 'react-native-indicators'
 import { widthPercentageToDP as wp } from 'react-native-responsive-screen';
 import * as MediaLibrary from 'expo-media-library';
 import FileViewer from 'react-native-file-viewer';
-import AlbumView from '../../screens/AlbumView';
 import { PhotosState } from '../../redux/reducers/photos.reducer';
-import { getLocalImages } from '../../screens/Home/init';
 export interface IPhoto {
   id: string
   modificationTime: number

@@ -17,14 +17,14 @@ import MenuItem from '../../components/MenuItem';
 import { layoutActions } from '../../redux/actions';
 import { deviceStorage } from '../../helpers';
 
-export interface IHomeProps extends Reducers {
+export interface IPhotosHome extends Reducers {
   navigation?: any
   dispatch: any
   photosState: PhotosState
   authenticationState: AuthenticationState
 }
 
-function Home(props: IHomeProps): JSX.Element {
+function PhotosHome(props: IPhotosHome): JSX.Element {
   const [isLoading, setIsLoading] = useState<boolean>(true)
 
   const init = async () => {
@@ -183,7 +183,7 @@ const mapStateToProps = (state: any) => {
   return { ...state };
 };
 
-export default connect(mapStateToProps)(Home)
+export default connect(mapStateToProps)(PhotosHome)
 
 const styles = StyleSheet.create({
   container: {

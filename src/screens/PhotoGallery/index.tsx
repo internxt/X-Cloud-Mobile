@@ -5,7 +5,6 @@ import { BackButton } from '../../components/BackButton';
 import { layoutActions } from '../../redux/actions';
 import AlbumDetailsModal from '../../modals/AlbumDetailsModal';
 import AddItemToModal from '../../modals/AddItemToModal'
-import PhotoDetailsModal from '../../modals/PhotoDetailsModal';
 import AlbumMenuItem from '../../components/MenuItem/AlbumMenuItem';
 import Photo from './Photo';
 import { widthPercentageToDP as wp } from 'react-native-responsive-screen';
@@ -16,7 +15,6 @@ import { LayoutState } from '../../redux/reducers/layout.reducer';
 import lodash from 'lodash'
 import { IPreview } from '../../components/PhotoList';
 import { WaveIndicator } from 'react-native-indicators';
-import { getLocalImages } from '../Home/init';
 
 interface IPhotoGallery {
   route: any;

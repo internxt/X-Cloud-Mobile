@@ -1,12 +1,10 @@
 import React, { useEffect, useState } from 'react'
-import prettysize from 'prettysize';
-import { Image, StyleSheet, Text, TextInput, TouchableHighlight, View } from 'react-native'
+import { StyleSheet, Text, TextInput } from 'react-native'
 import Modal from 'react-native-modalbox'
 //import TimeAgo from "react-native-timeago"
-import { connect, useDispatch, useSelector } from 'react-redux'
+import { connect } from 'react-redux'
 import Separator from '../../components/Separator'
 import { layoutActions } from '../../redux/actions';
-import SettingsItem from '../SettingsModal/SettingsItem';
 import OptionItem from './OptionItem';
 
 interface AlbumDetailsProps {
@@ -17,7 +15,6 @@ interface AlbumDetailsProps {
 
 function AlbumDetailsModal(props: AlbumDetailsProps) {
   const [originalAlbumName, setOriginalAlbumName] = useState('')
-  const [newAlbumName, setNewAlbumName] = useState('')
 
   useEffect(() => {
     if (props.layoutState.showAlbumModal === true) {

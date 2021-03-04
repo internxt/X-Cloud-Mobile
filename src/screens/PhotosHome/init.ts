@@ -5,12 +5,11 @@ import { Platform } from 'react-native';
 import RNFetchBlob from 'rn-fetch-blob';
 import * as Permissions from 'expo-permissions';
 import * as MediaLibrary from 'expo-media-library';
-import * as FileSystem from 'expo-file-system'
 import RNFS from 'react-native-fs';
 import { deviceStorage } from '../../helpers';
-import { PhotoActions, userActions } from '../../redux/actions';
+import { PhotoActions } from '../../redux/actions';
 import { Dispatch } from 'redux';
-import { IHomeProps } from './'
+import { IPhotosHome } from '.'
 import { store } from '../../store';
 import SimpleToast from 'react-native-simple-toast';
 import { AuthenticationState } from '../../redux/reducers/authentication.reducer';
@@ -244,7 +243,7 @@ export async function downloadPhoto(photo: any) {
   })
 }
 
-export const downloadPreview = async(preview: any, props: IHomeProps) => {
+export const downloadPreview = async(preview: any, props: IPhotosHome) => {
   const xToken = await deviceStorage.getItem('xToken')
   const xUser = await deviceStorage.getItem('xUser')
   const xUserJson = JSON.parse(xUser || '{}')
@@ -307,7 +306,7 @@ export function stopSync(): void {
   SHOULD_STOP = true;
 }
 
-export function getPreviews(props: IHomeProps): Promise<any> {
+export function getPreviews(props: IPhotosHome): Promise<any> {
   SHOULD_STOP = false;
   return getArrayPreviews(props).then((res: any) => {
     return mapSeries(res, (preview, next) => {
