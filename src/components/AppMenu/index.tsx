@@ -64,18 +64,23 @@ function AppMenu(props: AppMenuProps) {
 
       const token = props.authenticationState.token
       const mnemonic = props.authenticationState.user.mnemonic
+      const email = props.authenticationState.user.email
+      const userId = props.authenticationState.user.userId
 
       const headers = {
         'Authorization': `Bearer ${token}`,
         'internxt-mnemonic': mnemonic,
         'Content-Type': 'multipart/form-data'
       };
+      const bridgeURL = 'https://api.internxt.com'
 
       const regex = /^(.*:\/{0,2})\/?(.*)$/gm
       const file = result.uri.replace(regex, '$2')
 
       const finalUri = Platform.OS === 'ios' ? RNFetchBlob.wrap(decodeURIComponent(file)) : RNFetchBlob.wrap(result.uri)
+      const Blob = RNFetchBlob.polyfill.Blob
 
+      Blob.build(finalUri)
       RNFetchBlob.fetch('POST', `${process.env.REACT_NATIVE_API_URL}/api/storage/folder/${currentFolder}/upload`, headers,
         [
           { name: 'xfile', filename: result.name, data: finalUri }
