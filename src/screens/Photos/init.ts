@@ -59,17 +59,16 @@ async function uploadPhoto(photo: IHashedPhoto) {
   const xToken = await deviceStorage.getItem('xToken')
   const xUserJson = JSON.parse(xUser || '{}')
 
-  const headers = {
-    'Authorization': `Bearer ${xToken}`,
-    'internxt-mnemonic': xUserJson.mnemonic,
-    'Content-Type': 'multipart/form-data'
-  };
+  const headers: any = await getHeaders();
+  const headers2 = headers.map;
+
+  headers2['content-type'] = 'multipart/form-data'
 
   const parsedUri = photo.localUri.replace(/^file:\/\//, '');
 
   const finalUri = Platform.OS === 'ios' ? RNFetchBlob.wrap(decodeURIComponent(parsedUri)) : RNFetchBlob.wrap(photo.uri)
 
-  return RNFetchBlob.fetch('POST', `${process.env.REACT_NATIVE_PHOTOS_API_URL}/api/photos/storage/photo/upload`, headers,
+  return RNFetchBlob.fetch('POST', `${process.env.REACT_NATIVE_PHOTOS_API_URL}/api/photos/storage/photo/upload`, headers2,
     [
       { name: 'xfile', filename: photo.filename, data: finalUri },
       { name: 'hash', data: photo.hash }
@@ -101,18 +100,18 @@ const uploadPreview = async (preview: ImageResult, photoId: number, originalPhot
   const xUser = await deviceStorage.getItem('xUser')
   const xToken = await deviceStorage.getItem('xToken')
   const xUserJson = JSON.parse(xUser || '{}')
-  const headers = {
-    'Authorization': `Bearer ${xToken}`,
-    'internxt-mnemonic': xUserJson.mnemonic,
-    'Content-Type': 'multipart/form-data'
-  };
+
+  const headers: any = await getHeaders();
+  const headers2 = headers.map;
+
+  headers2['content-type'] = 'multipart/form-data'
 
   const parsedUri = preview.uri.replace(/^file:\/\//, '');
 
   const finalUri = Platform.OS === 'ios' ? RNFetchBlob.wrap(decodeURIComponent(parsedUri)) : RNFetchBlob.wrap(preview.uri)
 
   return RNFetchBlob.fetch('POST', `${process.env.REACT_NATIVE_PHOTOS_API_URL}/api/photos/storage/preview/upload/${photoId}`,
-    headers,
+    headers2,
     [
       { name: 'xfile', filename: originalPhoto.filename, data: finalUri }
     ])

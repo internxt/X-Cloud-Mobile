@@ -18,6 +18,7 @@ import RNFetchBlob from 'rn-fetch-blob';
 import { WaveIndicator } from 'react-native-indicators'
 import Toast from 'react-native-simple-toast'
 import FreeForYouModal from '../../modals/FreeForYouModal';
+import { getHeaders } from '../../helpers/headers';
 
 interface FileExplorerProps extends Reducers {
   navigation?: any
@@ -154,11 +155,12 @@ function FileExplorer(props: FileExplorerProps): JSX.Element {
     try {
       const token = props.authenticationState.token;
       const mnemonic = props.authenticationState.user.mnemonic;
-      const headers = {
-        'Authorization': `Bearer ${token}`,
-        'internxt-mnemonic': mnemonic,
-        'Content-Type': 'multipart/form-data'
-      }
+
+      const headers: any = await getHeaders();
+      const headers2 = headers.map;
+
+      headers2['content-type'] = 'multipart/form-data'
+
       const regex = /^(.*:\/{0,2})\/?(.*)$/gm
 
       analytics.track('file-upload-start', { userId: userData.uuid, email: userData.email, device: 'mobile' }).catch(() => {})
@@ -167,7 +169,7 @@ function FileExplorer(props: FileExplorerProps): JSX.Element {
       const file = uri.replace(regex, '$2') // if iOS remove file://
       const finalUri = Platform.OS === 'ios' ? RNFetchBlob.wrap(decodeURIComponent(file)) : RNFetchBlob.wrap(uri)
 
-      RNFetchBlob.fetch('POST', `${process.env.REACT_NATIVE_API_URL}/api/storage/folder/${currentFolder}/upload`, headers,
+      RNFetchBlob.fetch('POST', `${process.env.REACT_NATIVE_API_URL}/api/storage/folder/${currentFolder}/upload`, headers2,
         [
           { name: 'xfile', filename: name, data: finalUri }
         ])

@@ -9,6 +9,7 @@ import { connect } from 'react-redux';
 import RNFetchBlob from 'rn-fetch-blob';
 import { getLyticsData } from '../../helpers';
 import { getIcon } from '../../helpers/getIcon';
+import { getHeaders } from '../../helpers/headers';
 import analytics from '../../helpers/lytics';
 import { fileActions, layoutActions, userActions } from '../../redux/actions';
 import MenuItem from '../MenuItem';
@@ -38,7 +39,7 @@ function AppMenu(props: AppMenuProps) {
     }
   }
 
-  const uploadFile = (result: any, currentFolder: number | undefined) => {
+  const uploadFile = async (result: any, currentFolder: number | undefined) => {
     const userStorage = props.authenticationState.userStorage
 
     // TODO: String literals is a horrible practice
@@ -66,18 +67,17 @@ function AppMenu(props: AppMenuProps) {
       const token = props.authenticationState.token
       const mnemonic = props.authenticationState.user.mnemonic
 
-      const headers = {
-        'Authorization': `Bearer ${token}`,
-        'internxt-mnemonic': mnemonic,
-        'Content-Type': 'multipart/form-data'
-      };
+      const headers: any = await getHeaders();
+      const headers2 = headers.map;
+
+      headers2['content-type'] = 'multipart/form-data'
 
       const regex = /^(.*:\/{0,2})\/?(.*)$/gm
       const file = result.uri.replace(regex, '$2')
 
       const finalUri = Platform.OS === 'ios' ? RNFetchBlob.wrap(decodeURIComponent(file)) : RNFetchBlob.wrap(result.uri)
 
-      RNFetchBlob.fetch('POST', `${process.env.REACT_NATIVE_API_URL}/api/storage/folder/${currentFolder}/upload`, headers,
+      RNFetchBlob.fetch('POST', `${process.env.REACT_NATIVE_API_URL}/api/storage/folder/${currentFolder}/upload`, headers2,
         [
           { name: 'xfile', filename: result.name, data: finalUri }
         ])
