@@ -48,26 +48,20 @@ export default function App(): JSX.Element {
 
   // useEffect to receive shared file
   useEffect(() => {
-    if (Platform.OS === 'ios'){
+    if (Platform.OS === 'ios') {
       const regex = /inxt:\/\//g
 
-      Linking.addEventListener('url', handleOpenURL);
-
-      Linking.getInitialURL().then(res => {
-        if (res && !res.url) {
-          const uri = res
-
-          // check if it's a file or it's an url redirect
-          if (uri.match(/inxt:\/\/.*:\/*/g)) {
-            const finalUri = uri.replace(regex, '')
-
-            store.dispatch(fileActions.setUri(finalUri))
-          }
-        }
-      })
+      ReceiveSharingIntent.getReceivedFiles((files: any) => {
+        // files returns as JSON Array example
+        //[{ filePath: null, text: null, weblink: null, mimeType: null, contentUri: null, fileName: null, extension: null }]
+      },
+      (error: any) => {
+      },
+      'inxt' // share url protocol (must be unique to your app, suggest using your apple bundle id)
+      )
     } else {
       // Receive the file from the intent using react-native-receive-sharing-intent
-      ReceiveSharingIntent.getReceivedFiles(files => {
+      ReceiveSharingIntent.getReceivedFiles((files: any) => {
         const fileInfo = {
           fileUri: files[0].contentUri,
           fileName: files[0].fileName
@@ -78,7 +72,7 @@ export default function App(): JSX.Element {
         // files returns as JSON Array example
         //[{ filePath: null, text: null, weblink: null, mimeType: null, contentUri: null, fileName: null, extension: null }]
       },
-      (error) => {
+      (error: any) => {
         Alert.alert('There was an error', error)
       }, 'inxt' // share url protocol (must be unique to your app, suggest using your apple bundle id)
       )

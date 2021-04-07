@@ -20,7 +20,7 @@
 	<string>$(TeamIdentifierPrefix)$(CFBundleIdentifier)</string>
 	<key>com.apple.security.application-groups</key>
 	<array>
-		<string>group.com.internxt.cloud</string>
+		<string>group.com.internxt.snacks</string>
 	</array>
 </dict>
 </plist>
