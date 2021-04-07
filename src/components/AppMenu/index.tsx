@@ -1,6 +1,7 @@
 import { getDocumentAsync } from 'expo-document-picker';
-import { launchCameraAsync, launchImageLibraryAsync, MediaTypeOptions, requestCameraPermissionsAsync } from 'expo-image-picker';
+import { launchCameraAsync, launchImageLibraryAsync, MediaTypeOptions, requestCameraPermissionsAsync, requestMediaLibraryPermissionsAsync } from 'expo-image-picker';
 import { uniqueId } from 'lodash';
+import prettysize from 'prettysize';
 import React, { Fragment, useState, useRef } from 'react'
 import { View, StyleSheet, Platform, TextInput, Image, Alert } from 'react-native'
 import { TouchableWithoutFeedback } from 'react-native-gesture-handler';
@@ -38,6 +39,17 @@ function AppMenu(props: AppMenuProps) {
   }
 
   const uploadFile = (result: any, currentFolder: number | undefined) => {
+    const userStorage = props.authenticationState.userStorage
+
+    // TODO: String literals is a horrible practice
+    if (userStorage && prettysize(userStorage.limit) === '2 GB') {
+      const random = Math.floor(Math.random() * 4)
+
+      if (random === 2) {
+        props.dispatch(layoutActions.openFreeForYouModal())
+      }
+    }
+
     props.dispatch(fileActions.uploadFileStart())
 
     const userData = getLyticsData().then((res) => {
@@ -71,7 +83,6 @@ function AppMenu(props: AppMenuProps) {
         ])
         .uploadProgress({ count: 10 }, async (sent, total) => {
           props.dispatch(fileActions.uploadFileSetProgress(sent / total, result.id))
-          //console.log('--- UPLOAD PROGRESS appmenu ---', sent / total, '(sent)', sent, '(total)', total )
 
           if (sent / total >= 1) { // Once upload is finished (on small files it almost never reaches 100% as it uploads really fast)
             props.dispatch(fileActions.removeUploadingFile(result.id))
@@ -179,31 +190,25 @@ function AppMenu(props: AppMenuProps) {
                 {
                   text: 'Upload a document',
                   onPress: async () => {
-                    const { status } = await requestCameraPermissionsAsync()
+                    const result = await getDocumentAsync({ copyToCacheDirectory: false })
 
-                    if (status === 'granted') {
-                      const result = await getDocumentAsync({ copyToCacheDirectory: false })
+                    if (result.type !== 'cancel') {
+                      const fileUploading: any = result
 
-                      if (result.type !== 'cancel') {
-                        const fileUploading: any = result
+                      fileUploading.progress = 0
+                      fileUploading.currentFolder = props.filesState.folderContent.currentFolder
+                      fileUploading.createdAt = new Date()
+                      fileUploading.id = uniqueId()
 
-                        fileUploading.progress = 0
-                        fileUploading.currentFolder = props.filesState.folderContent.currentFolder
-                        fileUploading.createdAt = new Date()
-                        fileUploading.id = uniqueId()
-
-                        props.dispatch(fileActions.addUploadingFile(fileUploading))
-                        uploadFile(fileUploading, props.filesState.folderContent.currentFolder)
-                      }
-                    } else {
-                      Alert.alert('Camera permission needed to perform this action')
+                      props.dispatch(fileActions.addUploadingFile(fileUploading))
+                      uploadFile(fileUploading, props.filesState.folderContent.currentFolder)
                     }
                   }
                 },
                 {
                   text: 'Upload media',
                   onPress: async () => {
-                    const { status } = await requestCameraPermissionsAsync()
+                    const { status } = await requestMediaLibraryPermissionsAsync()
 
                     if (status === 'granted') {
                       const result = await launchImageLibraryAsync({ mediaTypes: MediaTypeOptions.All })
@@ -224,7 +229,7 @@ function AppMenu(props: AppMenuProps) {
                         uploadFile(fileUploading, fileUploading.currentFolder)
                       }
                     } else {
-                      Alert.alert('Camera permission needed to perform this action')
+                      Alert.alert('Camera roll permissions needed to perform this action')
                     }
                   }
                 },
@@ -303,33 +308,33 @@ const styles = StyleSheet.create({
     flexGrow: 1
   },
   container: {
-    height: 54,
-    flexDirection: 'row',
-    justifyContent: 'flex-start',
     backgroundColor: '#fff',
-    paddingTop: 3,
-    marginTop: Platform.OS === 'ios' ? 30 : 0
-  },
-  searchContainer: {
-    position: 'relative',
-    flex: 1,
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#f7f7f7',
-    marginLeft: 20,
-    marginRight: 20,
-    borderRadius: 30
-  },
-  searchInput: {
-    marginLeft: 15,
-    marginRight: 15,
-    fontFamily: 'CerebriSans-Medium',
-    fontSize: 17,
-    flex: 1
+    height: 54,
+    justifyContent: 'flex-start',
+    marginTop: Platform.OS === 'ios' ? 30 : 0,
+    paddingTop: 3
   },
   mr10: {
     marginRight: 10
+  },
+  searchContainer: {
+    alignItems: 'center',
+    backgroundColor: '#f7f7f7',
+    borderRadius: 30,
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginLeft: 20,
+    marginRight: 20,
+    position: 'relative'
+  },
+  searchInput: {
+    flex: 1,
+    fontFamily: 'CerebriSans-Medium',
+    fontSize: 17,
+    marginLeft: 15,
+    marginRight: 15
   }
 });
 

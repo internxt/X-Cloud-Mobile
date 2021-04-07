@@ -1,5 +1,5 @@
 import React from 'react'
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text } from 'react-native';
 import Modal from 'react-native-modalbox'
 import { connect } from 'react-redux';
 import { fileActions, layoutActions } from '../../redux/actions';
@@ -10,28 +10,25 @@ function SortModal(props: any) {
   return <Modal
     position={'bottom'}
     isOpen={props.layoutState.showSortModal}
-    swipeArea={20}
-    style={{ height: 240 }}
+    style={{ height: 300, paddingTop: 10, borderRadius: 8 }}
     backButtonClose={true}
     onClosed={() => {
       props.dispatch(layoutActions.closeSortModal())
     }}
     backdropPressToClose={true}
+    swipeToClose={true}
     animationDuration={200}
   >
-    <View style={styles.drawerKnob}></View>
 
     <Text
       style={
         props.filesState.sortType === sortTypes.DATE_ADDED ||
-                    props.filesState.sortType === ''
+          props.filesState.sortType === ''
           ? styles.sortOptionSelected
           : styles.sortOption
       }
       onPress={() => {
-        props.dispatch(
-          fileActions.setSortFunction(sortTypes.DATE_ADDED)
-        );
+        props.dispatch(fileActions.setSortFunction(sortTypes.DATE_ADDED))
       }}>Date Added</Text>
     <Text
       style={
@@ -74,28 +71,18 @@ const mapStateToProps = (state: any) => {
 export default connect(mapStateToProps)(SortModal)
 
 const styles = StyleSheet.create({
-  drawerKnob: {
-    backgroundColor: '#d8d8d8',
-    width: 56,
-    height: 7,
-    borderRadius: 4,
-    alignSelf: 'center',
-    marginTop: 10
-  },
   sortOption: {
-    fontFamily: 'CerebriSans-Bold',
+    color: 'black',
+    fontFamily: 'Averta-Semibold',
     fontSize: 18,
-    paddingTop: 13,
-    paddingBottom: 13,
-    paddingLeft: 28,
-    color: 'gray'
+    paddingLeft: 40,
+    paddingTop: 25
   },
   sortOptionSelected: {
-    fontFamily: 'CerebriSans-Bold',
+    color: '#0084ff',
+    fontFamily: 'Averta-Semibold',
     fontSize: 18,
-    color: '#0054ff',
-    paddingTop: 13,
-    paddingBottom: 13,
-    paddingLeft: 28
+    paddingLeft: 40,
+    paddingTop: 25
   }
 })

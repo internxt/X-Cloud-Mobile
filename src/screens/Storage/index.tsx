@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import prettysize from 'prettysize';
-import { View, Text, StyleSheet, Image, ActivityIndicator, Platform } from 'react-native';
-import { TouchableNativeFeedback, TouchableOpacity, TouchableWithoutFeedback } from 'react-native-gesture-handler';
+import { View, Text, StyleSheet, Image, ActivityIndicator, Platform, BackHandler } from 'react-native';
+import { TouchableOpacity, TouchableWithoutFeedback } from 'react-native-gesture-handler';
 import { connect } from 'react-redux';
 import ProgressBar from '../../components/ProgressBar';
 import { getIcon } from '../../helpers/getIcon';
@@ -11,6 +11,7 @@ import { IPlan, IProduct, storageService } from '../../redux/services';
 import { Reducers } from '../../redux/reducers/reducers';
 import { loadValues } from '../../modals';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { widthPercentageToDP as wp } from 'react-native-responsive-screen';
 
 interface StorageProps extends Reducers {
   dispatch?: any,
@@ -19,7 +20,6 @@ interface StorageProps extends Reducers {
 }
 
 function Storage(props: StorageProps): JSX.Element {
-  const userToken = props.authenticationState.token
   const [usageValues, setUsageValues] = useState({ usage: 0, limit: 0 })
   const [isLoading, setIsLoading] = useState(true)
   const [products, setProducts] = useState<IProduct[]>([])
@@ -27,19 +27,28 @@ function Storage(props: StorageProps): JSX.Element {
   const [chosenProduct, setChosenProduct] = useState<IProduct>()
 
   const getProducts = async () => {
-    const products = await storageService.loadAvailableProducts(userToken)
+    const products = await storageService.loadAvailableProducts()
 
     return products
   }
 
   const getPlans = async (product: IProduct) => {
-    const plans = await storageService.loadAvailablePlans(userToken, product.id)
+    const plans = await storageService.loadAvailablePlans(product.id)
 
     return plans
   }
 
-  useEffect(() => {
+  // BackHandler
+  const backAction = () => {
+    if (!chosenProduct) {
+      props.navigation.replace('FileExplorer')
+    } else {
+      setChosenProduct(undefined)
+    }
+    return true
+  }
 
+  useEffect(() => {
     loadValues().then(res => {
       setUsageValues(res)
     }).catch(() => { })
@@ -57,6 +66,10 @@ function Storage(props: StorageProps): JSX.Element {
         setIsLoading(false)
       })
     }
+
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', backAction)
+
+    return () => backHandler.remove()
   }, [chosenProduct])
 
   return (
@@ -64,13 +77,18 @@ function Storage(props: StorageProps): JSX.Element {
       <View style={styles.container}>
         <View style={styles.navigatorContainer}>
           <View style={styles.backButton}>
-            <TouchableNativeFeedback
+            <TouchableOpacity
               onPress={() => {
-                props.navigation.replace('FileExplorer')
+                if (props.layoutState.currentApp === 'FileExplorer') {
+                  props.navigation.replace('FileExplorer')
+                } else {
+                  props.navigation.replace('Photos')
+                }
               }}
+              style={styles.backTouchable}
             >
               <Image style={styles.backIcon} source={getIcon('back')} />
-            </TouchableNativeFeedback>
+            </TouchableOpacity>
           </View>
 
           <Text style={styles.backText}>Storage</Text>
@@ -148,6 +166,7 @@ function Storage(props: StorageProps): JSX.Element {
                             onPress={() => {
                               setChosenProduct(undefined)
                             }}
+                            style={styles.paymentBack}
                           >
                             <Image style={styles.paymentBackIcon} source={getIcon('back')} />
                           </TouchableOpacity>
@@ -185,51 +204,130 @@ function Storage(props: StorageProps): JSX.Element {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    justifyContent: 'flex-start',
-    height: '100%',
-    backgroundColor: 'white'
-  },
-  navigatorContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderBottomWidth: 1,
-    paddingBottom: 20,
-    borderColor: '#f2f2f2'
-  },
   backButton: {
-    flex: 0.1,
-    alignItems: 'center',
-    justifyContent: 'center'
+    flex: 0.1
   },
   backIcon: {
     height: 14,
     width: 9
   },
   backText: {
+    color: 'black',
     flex: 0.8,
-    textAlign: 'center',
     fontFamily: 'CerebriSans-Medium',
     fontSize: 16,
-    color: 'black'
+    textAlign: 'center'
   },
-  progressContainer: {
+  backTouchable: {
+    alignItems: 'center',
+    height: wp('10'),
     justifyContent: 'center',
+    width: wp('10')
+  },
+  blue: {
+    backgroundColor: '#096dff'
+  },
+  bold: {
+    fontFamily: 'CerebriSans-Bold'
+  },
+  cardsContainer: {
+    flexGrow: 1,
+    marginLeft: 20,
+    paddingTop: 20
+  },
+  circle: {
+    backgroundColor: '#ededed',
+    borderRadius: 100,
+    height: 16,
+    marginRight: 6,
+    width: 16
+  },
+  container: {
+    backgroundColor: 'white',
+    height: '100%',
+    justifyContent: 'flex-start'
+  },
+  firstRow: {
+    alignItems: 'center',
+    flexDirection: 'row'
+  },
+  footer: {
+    color: '#7e848c',
+    fontFamily: 'CerebriSans-Regular',
+    fontSize: 16,
+    letterSpacing: -0.1,
+    lineHeight: 22,
+    marginLeft: 0,
+    marginTop: 20
+  },
+  legend: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    marginRight: 30
+  },
+  navigatorContainer: {
+    alignItems: 'center',
     borderBottomWidth: 1,
     borderColor: '#f2f2f2',
+    flexDirection: 'row',
+    height: wp('10')
+  },
+  paymentBack: {
+    alignItems: 'center',
+    height: wp('6'),
+    justifyContent: 'center',
+    width: wp('6')
+  },
+  paymentBackIcon: {
+    height: 13,
+    marginRight: 10,
+    width: 8
+  },
+  progressContainer: {
+    borderBottomWidth: 1,
+    borderColor: '#f2f2f2',
+    justifyContent: 'center',
     paddingBottom: 45,
     paddingTop: 30
   },
-  firstRow: {
-    flexDirection: 'row',
-    alignItems: 'center'
-  },
   progressTitle: {
+    color: 'black',
     flex: 0.5,
     fontFamily: 'CerebriSans-Bold',
     fontSize: 18,
-    color: 'black',
     paddingLeft: 20
+  },
+  secondRow: {
+    flexDirection: 'row',
+    marginLeft: 20
+  },
+  secondRowText: {
+    color: '#7e848c',
+    fontFamily: 'CerebriSans-Regular',
+    fontSize: 13
+  },
+  title: {
+    color: 'black',
+    fontFamily: 'CerebriSans-Bold',
+    fontSize: 18,
+    letterSpacing: 0,
+    marginRight: 10,
+    paddingBottom: Platform.OS === 'android' ? wp('1') : 0,
+    textAlignVertical: 'center'
+  },
+  titleContainer: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    marginBottom: 12
+  },
+  titlePlan: {
+    borderColor: '#eaeced',
+    borderLeftWidth: 1,
+    color: '#7e848c',
+    fontFamily: 'CerebriSans-Medium',
+    fontSize: 18,
+    paddingBottom: Platform.OS === 'android' ? wp('1') : 0,
+    paddingLeft: 10
   },
   usedSapceContainer: {
     flexDirection: 'row',
@@ -238,76 +336,9 @@ const styles = StyleSheet.create({
     paddingRight: 20
   },
   usedSpace: {
-    fontFamily: 'CerebriSans-Regular',
     color: 'black',
+    fontFamily: 'CerebriSans-Regular',
     fontSize: 13
-  },
-  bold: {
-    fontFamily: 'CerebriSans-Bold'
-  },
-  secondRow: {
-    flexDirection: 'row',
-    marginLeft: 20
-  },
-  legend: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginRight: 30
-  },
-  circle: {
-    width: 16,
-    height: 16,
-    borderRadius: 100,
-    marginRight: 6,
-    backgroundColor: '#ededed'
-  },
-  blue: {
-    backgroundColor: '#096dff'
-  },
-  secondRowText: {
-    fontSize: 13,
-    fontFamily: 'CerebriSans-Regular',
-    color: '#7e848c'
-  },
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12
-  },
-  title: {
-    fontFamily: 'CerebriSans-Bold',
-    fontSize: 18,
-    height: 32,
-    letterSpacing: 0,
-    color: 'black',
-    marginRight: 10
-  },
-  titlePlan: {
-    fontFamily: 'CerebriSans-Medium',
-    fontSize: 18,
-    height: 32,
-    paddingLeft: 10,
-    borderLeftWidth: 1,
-    borderColor: '#eaeced'
-  },
-  paymentBackIcon: {
-    width: 8,
-    height: 13,
-    marginRight: 10
-  },
-  cardsContainer: {
-    paddingTop: 20,
-    marginLeft: 20,
-    flexGrow: 1
-  },
-  footer: {
-    fontFamily: 'CerebriSans-Regular',
-    fontSize: 16,
-    lineHeight: 22,
-    letterSpacing: -0.1,
-    marginLeft: 0,
-    marginTop: 20,
-    color: '#7e848c'
   }
 })
 
