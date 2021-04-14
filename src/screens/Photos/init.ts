@@ -28,19 +28,32 @@ const getArrayPhotos = async (images: Asset[]) => {
       return next(Error('Missing localUri'));
     }
 
-    const p = await manipulateAsync(asset.localUri,
-      [],
-      { compress: 1, format: SaveFormat.PNG }
-    )
-    const sha256Id = await RNFS.hash(p.uri, 'sha256')
+    if (Platform.OS === 'ios') {
+      const p = await manipulateAsync(asset.localUri,
+        [],
+        { compress: 1, format: SaveFormat.PNG }
+      )
+      const sha256Id = await RNFS.hash(p.uri, 'sha256')
+      const hashedImage = {
+        ...image,
+        hash: sha256Id,
+        localUri: asset.localUri
+      }
 
-    const hashedImage = {
-      ...image,
-      hash: sha256Id,
-      localUri: asset.localUri
+      next(null, hashedImage)
     }
 
-    next(null, hashedImage)
+    if (Platform.OS === 'android'){
+      const sha256Id = await RNFS.hash(asset.localUri, 'sha256')
+      const hashedImage = {
+        ...image,
+        hash: sha256Id,
+        localUri: asset.localUri
+      }
+
+      next(null, hashedImage)
+    }
+
   });
 
   return result;
