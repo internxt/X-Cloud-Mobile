@@ -100,10 +100,7 @@ function PhotoGallery(props: PhotoGalleryProps): JSX.Element {
     if (!isStart) {
       if (offsetCursor > prevOffset) {
         getUploadedPhotos().then((res)=>{
-          if (offsetCursor >= res.length) {
-          } else {
-            start(offsetCursor, endCursor).then(()=>{setIsStart(false)}).catch(()=>{})
-          }
+          start(offsetCursor, endCursor).then(()=>{setIsStart(false)}).catch(()=>{})
         })
       }
     }
