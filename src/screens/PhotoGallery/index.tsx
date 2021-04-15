@@ -11,7 +11,7 @@ import { Dispatch } from 'redux';
 import { LayoutState } from '../../redux/reducers/layout.reducer';
 import PhotoList from '../../components/PhotoList';
 import { MaterialIndicator, WaveIndicator } from 'react-native-indicators';
-import { cachePicture, downloadPhoto, getLocalImages, getPreviews, getUploadedPhotos, IHashedPhoto } from '../Photos/init';
+import { cachePicture, downloadPhoto, getLocalImages, getPreviews, IHashedPhoto } from '../Photos/init';
 import _ from 'lodash'
 import FileViewer from 'react-native-file-viewer'
 import RNFS from 'react-native-fs'
@@ -99,9 +99,7 @@ function PhotoGallery(props: PhotoGalleryProps): JSX.Element {
   const loadMoreData = () => {
     if (!isStart) {
       if (offsetCursor > prevOffset) {
-        getUploadedPhotos().then((res)=>{
-          start(offsetCursor, endCursor).then(()=>{setIsStart(false)}).catch(()=>{})
-        })
+        start(offsetCursor, endCursor).then(()=>{setIsStart(false)}).catch(()=>{})
       }
     }
   }
