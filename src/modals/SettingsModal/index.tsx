@@ -7,129 +7,58 @@ import SettingsItem from './SettingsItem';
 import prettysize from 'prettysize'
 import Separator from '../../components/Separator';
 import { connect } from 'react-redux';
-import { getHeaders } from '../../helpers/headers';
-import { deviceStorage } from '../../helpers';
-import analytics, { getLyticsUuid } from '../../helpers/lytics';
 import Bold from '../../components/Bold';
-import { AuthenticationState } from '../../redux/reducers/authentication.reducer';
 import { Dispatch } from 'redux';
 import { LayoutState } from '../../redux/reducers/layout.reducer';
 import strings from '../../../assets/lang/strings';
-
-function identifyPlanName(bytes: number): string {
-  return bytes === 0 ? 'Free 10GB' : prettysize(bytes)
-}
-
-async function loadUsage(): Promise<number> {
-  return fetch(`${process.env.REACT_NATIVE_API_URL}/api/usage`, {
-    method: 'get',
-    headers: await getHeaders()
-  }).then(res => {
-    if (res.status !== 200) { throw Error('Cannot load usage') }
-    return res
-  }).then(res => res.json()).then(res => { return res.total; })
-}
-
-async function loadLimit(): Promise<number> {
-  return fetch(`${process.env.REACT_NATIVE_API_URL}/api/limit`, {
-    method: 'get',
-    headers: await getHeaders()
-  }).then(res => {
-    if (res.status !== 200) { throw Error('Cannot load limit') }
-    return res
-  }).then(res => res.json()).then(res => { return res.maxSpaceBytes })
-}
-
-export async function loadValues(): Promise<{ usage: number, limit: number }> {
-  const limit = await loadLimit()
-  const usage = await loadUsage()
-
-  const uuid = await getLyticsUuid()
-
-  analytics.identify(uuid, {
-    platform: 'mobile',
-    storage: usage,
-    plan: identifyPlanName(limit),
-    userId: uuid
-  }).catch(() => { })
-
-  return { usage, limit }
-}
-
-async function initializePhotosUser(token: string, mnemonic: string): Promise<any> {
-  const xUser = await deviceStorage.getItem('xUser')
-  const xUserJson = JSON.parse(xUser || '{}')
-  const email = xUserJson.email
-
-  return fetch(`${process.env.REACT_NATIVE_PHOTOS_API_URL}/api/photos/initialize`, {
-    method: 'POST',
-    headers: await getHeaders(),
-    body: JSON.stringify({
-      email: email,
-      mnemonic: mnemonic
-    })
-  }).then(res => {
-    return res.json()
-  })
-}
-
-async function photosUserData(authenticationState: AuthenticationState): Promise<any> {
-  const token = authenticationState.token;
-  const mnemonic = authenticationState.user.mnemonic;
-  const headers = {
-    'Authorization': `Bearer ${token}`,
-    'internxt-mnemonic': mnemonic,
-    'Content-Type': 'application/json; charset=utf-8'
-  };
-
-  return fetch(`${process.env.REACT_NATIVE_PHOTOS_API_URL}/api/photos/user`, {
-    method: 'GET',
-    headers
-  }).then(res => {
-    if (res.status === 400) {
-      return initializePhotosUser(token, mnemonic)
-    }
-    return res.json()
-  }).then(res => {
-    return res
-  })
-}
-
+import * as userService from './../../services/user';
+import { deviceStorage } from '../../helpers';
+import { StackNavigationProp } from 'react-navigation-stack/lib/typescript/src/vendor/types';
 interface SettingsModalProps {
-  user: any
+  user: userService.User
   layoutState: LayoutState
   dispatch: Dispatch,
-  navigation: any
+  navigation: StackNavigationProp
 }
+const DEFAULT_LIMIT = 1024 * 1024 * 1024 * 10;
 
 function SettingsModal(props: SettingsModalProps) {
 
-  const [usageValues, setUsageValues] = useState({ usage: 0, limit: 0 })
-  const [isLoadingUsage, setIsLoadingUpdate] = useState(false)
+  const [isLoadingUsage, setIsLoadingUpdate] = useState(false);
+  const [limitStorage, setLimitStorage] = useState<number>(DEFAULT_LIMIT);
+  const [usageStorage, setUsageStorage] = useState<number>(0);
+
+  const checkLimitDeviceStorage = async () => {
+    try {
+      const limitDeviceStorage = await deviceStorage.getItem('limitDeviceStorage');
+
+      if (limitDeviceStorage) {
+        return setLimitStorage(parseInt(limitDeviceStorage, 10))
+      } else {
+
+        const limit = await userService.loadLimit();
+
+        return deviceStorage.setItem('limitDeviceStorage', limit.toString());
+      }
+
+    } catch (err) {
+      throw err;
+    }
+  }
+
+  const checkUsage = async () => {
+    return userService.loadUsage().then((res) => {
+      setUsageStorage(res);
+      setIsLoadingUpdate(false);
+    })
+  }
 
   useEffect(() => {
     if (props.layoutState.showSettingsModal) {
-      setIsLoadingUpdate(true)
-      loadValues().then(values => {
-        setUsageValues(values)
-      }).catch(() => { })
-        .finally(() => {
-          setIsLoadingUpdate(false)
-        })
+      checkLimitDeviceStorage()
+      checkUsage();
     }
   }, [props.layoutState.showSettingsModal])
-
-  const putLimitUsage = () => {
-    if (usageValues.limit > 0) {
-      if (usageValues.limit < 108851651149824) {
-        return prettysize(usageValues.limit);
-      } else if (usageValues.limit >= 108851651149824) {
-        return '\u221E';
-      } else {
-        return '...';
-      }
-    }
-  }
 
   // Check current screen to change settings Photos/Drive text
   useEffect(() => {
@@ -159,8 +88,8 @@ function SettingsModal(props: SettingsModalProps) {
 
       <ProgressBar
         styleProgress={styles.progressHeight}
-        totalValue={usageValues.limit}
-        usedValue={usageValues.usage}
+        totalValue={limitStorage}
+        usedValue={usageStorage}
       />
 
       {isLoadingUsage ?
@@ -168,9 +97,9 @@ function SettingsModal(props: SettingsModalProps) {
         :
         <Text style={styles.usageText}>
           <Text>{strings.screens.storage.space.used.used} </Text>
-          <Bold>{prettysize(usageValues.usage)}</Bold>
+          <Bold>{prettysize(usageStorage)}</Bold>
           <Text> {strings.screens.storage.space.used.of} </Text>
-          <Bold>{putLimitUsage()}</Bold>
+          <Bold>{userService.convertLimitUser(limitStorage)}</Bold>
         </Text>
       }
 
