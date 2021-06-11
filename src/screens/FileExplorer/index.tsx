@@ -19,6 +19,8 @@ import { WaveIndicator } from 'react-native-indicators'
 import Toast from 'react-native-simple-toast'
 import FreeForYouModal from '../../modals/FreeForYouModal';
 import strings from '../../../assets/lang/strings';
+import { deviceStorage } from '../../helpers';
+import * as userService from './../../services/user';
 
 interface FileExplorerProps extends Reducers {
   navigation?: any
@@ -50,7 +52,17 @@ function FileExplorer(props: FileExplorerProps): JSX.Element {
     }
   }
 
+  const refreshLimitStorage = async () => {
+    await deviceStorage.deleteItem('limitDeviceStorage');
+
+    const limit = await userService.loadLimit();
+
+    return deviceStorage.setItem('limitDeviceStorage', limit.toString());
+
+  };
+
   useEffect(() => {
+    refreshLimitStorage();
     getLyticsData().then(userData => {
       loadValues().then(res => {
         const currentPlan = {
@@ -69,11 +81,11 @@ function FileExplorer(props: FileExplorerProps): JSX.Element {
               storage_used: currentPlan.usage,
               storage_limit: currentPlan.limit,
               storage_usage: currentPlan.percentage
-            }).catch(() => {})
+            }).catch(() => { })
           }
-        } catch {}
+        } catch { }
       })
-    }).catch(() => {})
+    }).catch(() => { })
   }, [])
 
   // useEffect to trigger uploadFile while app on background
@@ -162,7 +174,7 @@ function FileExplorer(props: FileExplorerProps): JSX.Element {
       }
       const regex = /^(.*:\/{0,2})\/?(.*)$/gm
 
-      analytics.track('file-upload-start', { userId: userData.uuid, email: userData.email, device: 'mobile' }).catch(() => {})
+      analytics.track('file-upload-start', { userId: userData.uuid, email: userData.email, device: 'mobile' }).catch(() => { })
       props.dispatch(fileActions.uploadFileStart(name))
 
       const file = uri.replace(regex, '$2') // if iOS remove file://
