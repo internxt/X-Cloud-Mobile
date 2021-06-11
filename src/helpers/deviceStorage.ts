@@ -1,21 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
-export interface UserDeviceStorage {
-  bucket: string
-  createdAt: Date
-  credit: number
-  email: string
-  lastname: string
-  mnemonic: string
-  name: string
-  privateKey: string
-  publicKey: string
-  registerCompleted: boolean
-  revocationKey: string
-  rootFolderId: number
-  userId: string
-  uuid: string
-}
+import { User } from '../services/user';
 
 export interface UserPhotosDeviceStorage {
   createdAt: Date
@@ -28,7 +12,7 @@ export interface UserPhotosDeviceStorage {
 }
 
 export const deviceStorage = {
-  async saveItem(key: string, value: any): Promise<void> {
+  async setItem(key: string, value: any): Promise<void> {
     try {
       return await AsyncStorage.setItem(key, value);
     } catch (error) {
@@ -52,7 +36,7 @@ export const deviceStorage = {
   async existsItem(key: string): Promise<boolean> {
     return !!this.getItem(key);
   },
-  async getUserStorage(): Promise<UserDeviceStorage | null> {
+  async getUserStorage(): Promise<User | null> {
     try {
       const user = await this.getItem('xUser');
 
