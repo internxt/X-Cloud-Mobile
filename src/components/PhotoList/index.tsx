@@ -11,6 +11,7 @@ import Photo from './Photo'
 import EmptyPhotoList from './EmptyPhotoList';
 import { IApiPhotoWithPreview } from '../../types/api/photos/IApiPhoto';
 import { IHashedPhoto } from '../../screens/Photos/init';
+import { StackNavigationProp } from 'react-navigation-stack/lib/typescript/src/vendor/types';
 
 export interface IPhoto {
   id: string
@@ -35,7 +36,7 @@ interface PhotoListProps extends FlatListProps<MediaLibrary.Asset> {
   photosState: PhotosState
   authenticationState?: any
   dispatch?: any
-  navigation: any
+  navigation: StackNavigationProp
   updateDownloadedImageStatus: (remotePreview: IApiPhotoWithPreview, downloadedPhoto: IHashedPhoto) => void
 }
 

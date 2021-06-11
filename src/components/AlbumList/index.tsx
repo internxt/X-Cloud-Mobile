@@ -1,6 +1,7 @@
 import React from 'react'
 import { StyleSheet, Pressable, View } from 'react-native';
 import { FlatList } from 'react-native-gesture-handler';
+import { StackNavigationProp } from 'react-navigation-stack/lib/typescript/src/vendor/types';
 import { connect } from 'react-redux';
 import AlbumCard from '../AlbumCard';
 import { IPhoto } from '../PhotoList';
@@ -21,7 +22,7 @@ interface AlbumListProps {
     photosState?: any
     authenticationState?: any
     dispatch?: any
-    navigation: any
+    navigation: StackNavigationProp
 }
 
 function AlbumList(props: AlbumListProps) {

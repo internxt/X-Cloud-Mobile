@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { StyleSheet } from 'react-native';
+import { StackNavigationProp } from 'react-navigation-stack/lib/typescript/src/vendor/types';
 import { connect } from 'react-redux';
 import { deviceStorage, normalize } from '../../helpers';
 import { userActions } from '../../redux/actions';
@@ -13,7 +14,7 @@ import { isNullOrEmpty, isStrongPassword } from './registerUtils';
 
 interface RegisterProps {
   authenticationState: AuthenticationState
-  navigation: any
+  navigation: StackNavigationProp
   dispatch: any
 }
 

@@ -1,6 +1,7 @@
 import React, { SetStateAction, useState } from 'react';
 import { Alert, KeyboardAvoidingView, Text, TextInput, View } from 'react-native';
 import { TouchableOpacity } from 'react-native-gesture-handler';
+import { StackNavigationProp } from 'react-navigation-stack/lib/typescript/src/vendor/types';
 import { IRegisterScreenStyles } from '.';
 import strings from '../../../assets/lang/strings';
 import analytics from '../../helpers/lytics';
@@ -21,7 +22,7 @@ interface RegisterStep3Props {
   isValidPassword: boolean
   isValidStep: boolean
   setRegisterStep: React.Dispatch<SetStateAction<number>>
-  navigation: any
+  navigation: StackNavigationProp
   dispatch: any
 }
 

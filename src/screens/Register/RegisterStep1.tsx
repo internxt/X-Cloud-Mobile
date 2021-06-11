@@ -1,6 +1,7 @@
 import React, { SetStateAction } from 'react';
 import { KeyboardAvoidingView, Text, TextInput, View } from 'react-native';
 import { TouchableOpacity } from 'react-native-gesture-handler';
+import { StackNavigationProp } from 'react-navigation-stack/lib/typescript/src/vendor/types';
 import { IRegisterScreenStyles } from '.';
 import strings from '../../../assets/lang/strings';
 
@@ -17,7 +18,7 @@ interface RegisterStep1Props {
   isValidEmail: boolean
   isValidStep: boolean
   setRegisterStep: React.Dispatch<SetStateAction<number>>
-  navigation: any
+  navigation: StackNavigationProp
 }
 
 const RegisterStep1 = (props: RegisterStep1Props) => {

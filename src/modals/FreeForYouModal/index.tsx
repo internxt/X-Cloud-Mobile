@@ -5,11 +5,12 @@ import { connect } from 'react-redux';
 import Modal from 'react-native-modalbox'
 import { widthPercentageToDP as wp } from 'react-native-responsive-screen';
 import { layoutActions } from '../../redux/actions';
+import { StackNavigationProp } from 'react-navigation-stack/lib/typescript/src/vendor/types';
 
 interface IFreeForYou {
   layoutState: any
   dispatch: any
-  navigation: any
+  navigation: StackNavigationProp
 }
 
 function FreeForYouModal(props: IFreeForYou) {

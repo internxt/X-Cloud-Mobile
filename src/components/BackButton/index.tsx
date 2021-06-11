@@ -4,11 +4,12 @@ import {
   Image
 } from 'react-native';
 import { TouchableOpacity } from 'react-native-gesture-handler';
+import { StackNavigationProp } from 'react-navigation-stack/lib/typescript/src/vendor/types';
 import backBtn from '../../../assets/icons/icon-back.png';
 
 interface BackButtonProps {
     style?: any
-    navigation: any
+    navigation: StackNavigationProp
     filesState?: any
     dispatch?: any,
     layoutState?: any

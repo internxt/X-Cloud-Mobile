@@ -7,8 +7,10 @@ import { connect } from 'react-redux';
 import strings from '../../../assets/lang/strings';
 import { layoutActions } from '../../redux/actions';
 import { LayoutState } from '../../redux/reducers/layout.reducer';
+import { StackNavigationProp } from 'react-navigation-stack/lib/typescript/src/vendor/types';
+
 interface ComingSoonProps {
-    navigation: any
+    navigation: StackNavigationProp
     layoutState: LayoutState
     dispatch: any
 }

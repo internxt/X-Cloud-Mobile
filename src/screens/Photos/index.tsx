@@ -17,9 +17,10 @@ import { layoutActions, PhotoActions } from '../../redux/actions';
 import strings from '../../../assets/lang/strings';
 import { queue } from 'async'
 import EmptyPhotoList from '../../components/PhotoList/EmptyPhotoList';
+import { StackNavigationProp } from 'react-navigation-stack/lib/typescript/src/vendor/types';
 
 export interface IPhotosProps extends Reducers {
-  navigation: any
+  navigation: StackNavigationProp
   dispatch: any
   photosState: PhotosState
   loggedIn: boolean

@@ -4,7 +4,7 @@ import AppMenu from '../../components/AppMenu'
 import { fileActions, userActions } from '../../redux/actions';
 import { connect } from 'react-redux';
 import FileList from '../../components/FileList';
-import SettingsModal, { loadValues } from '../../modals/SettingsModal';
+import SettingsModal from '../../modals/SettingsModal';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import { getIcon } from '../../helpers/getIcon';
 import FileDetailsModal from '../../modals/FileDetailsModal';
@@ -21,9 +21,10 @@ import FreeForYouModal from '../../modals/FreeForYouModal';
 import strings from '../../../assets/lang/strings';
 import { deviceStorage } from '../../helpers';
 import * as userService from './../../services/user';
+import { StackNavigationProp } from 'react-navigation-stack/lib/typescript/src/vendor/types';
 
 interface FileExplorerProps extends Reducers {
-  navigation?: any
+  navigation?: StackNavigationProp
   filesState: any
   dispatch?: any,
   layoutState: any

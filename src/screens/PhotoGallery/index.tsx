@@ -13,9 +13,10 @@ import { TouchableOpacity } from 'react-native-gesture-handler';
 import Photo from '../../components/PhotoList/Photo';
 import { IPhotosToRender } from '../Photos';
 import { PhotoActions } from '../../redux/actions';
+import { StackNavigationProp } from 'react-navigation-stack/lib/typescript/src/vendor/types';
 
 interface PhotoGalleryProps {
-  navigation: any
+  navigation: StackNavigationProp
   photosToRender: IPhotosToRender
   dispatch: Dispatch,
   isSyncing: boolean

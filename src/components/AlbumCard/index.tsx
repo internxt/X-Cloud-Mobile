@@ -1,11 +1,12 @@
 import * as React from 'react';
 import { FlatList, Image, StyleProp, StyleSheet, Text, View, ViewStyle } from 'react-native';
+import { StackNavigationProp } from 'react-navigation-stack/lib/typescript/src/vendor/types';
 
 interface AlbumProps {
   style?: StyleProp<ViewStyle>
   album?: any
   withTitle: boolean
-  navigation: any
+  navigation: StackNavigationProp
   photosState?: any
   dispatch?: any,
   layoutState?: any
