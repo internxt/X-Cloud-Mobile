@@ -9,16 +9,19 @@ import PlanCard from './PlanCard';
 import { LinearGradient } from 'expo-linear-gradient';
 import { IPlan, IProduct, storageService } from '../../redux/services';
 import { Reducers } from '../../redux/reducers/reducers';
-import { loadValues } from '../../modals';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { widthPercentageToDP as wp } from 'react-native-responsive-screen';
 import strings from '../../../assets/lang/strings';
+import { StackNavigationProp } from 'react-navigation-stack/lib/typescript/src/vendor/types';
+import { deviceStorage } from '../../helpers';
+import * as userService from './../../services/user';
 
 interface StorageProps extends Reducers {
   dispatch?: any,
-  navigation?: any,
+  navigation?: StackNavigationProp,
   currentPlan: number
 }
+const DEFAULT_LIMIT = 1024 * 1024 * 1024 * 10;
 
 function Storage(props: StorageProps): JSX.Element {
   const [usageValues, setUsageValues] = useState({ usage: 0, limit: 0 })
@@ -26,6 +29,8 @@ function Storage(props: StorageProps): JSX.Element {
   const [products, setProducts] = useState<IProduct[]>([])
   const [plans, setPlans] = useState<IPlan[]>([])
   const [chosenProduct, setChosenProduct] = useState<IProduct>()
+  const [limitStorage, setLimitStorage] = useState<number>(DEFAULT_LIMIT);
+  const [usageStorage, setUsageStorage] = useState<number>(0);
 
   const getProducts = async () => {
     const products = await storageService.loadAvailableProducts()
@@ -41,7 +46,7 @@ function Storage(props: StorageProps): JSX.Element {
 
   // BackHandler
   const backAction = () => {
-    if (!chosenProduct) {
+    if (!chosenProduct && props.navigation) {
       props.navigation.replace('FileExplorer')
     } else {
       setChosenProduct(undefined)
@@ -49,22 +54,33 @@ function Storage(props: StorageProps): JSX.Element {
     return true
   }
 
-  const putLimitUsage = () => {
-    if (usageValues.limit > 0) {
-      if (usageValues.limit < 108851651149824) {
-        return prettysize(usageValues.limit);
-      } else if (usageValues.limit >= 108851651149824) {
-        return '\u221E';
+  const checkLimitDeviceStorage = async () => {
+    try {
+      const limitDeviceStorage = await deviceStorage.getItem('limitDeviceStorage');
+
+      if (limitDeviceStorage) {
+        return setLimitStorage(parseInt(limitDeviceStorage, 10))
       } else {
-        return '...';
+
+        const limit = await userService.loadLimit();
+
+        return deviceStorage.setItem('limitDeviceStorage', limit.toString());
       }
+
+    } catch (err) {
+      throw err;
     }
   }
 
+  const checkUsage = async () => {
+    return userService.loadUsage().then((res) => {
+      setUsageStorage(res);
+    })
+  }
+
   useEffect(() => {
-    loadValues().then(res => {
-      setUsageValues(res)
-    }).catch(() => { })
+    checkLimitDeviceStorage()
+    checkUsage();
 
     getProducts().then((res) => {
       setProducts(res)
@@ -92,10 +108,12 @@ function Storage(props: StorageProps): JSX.Element {
           <View style={styles.backButton}>
             <TouchableOpacity
               onPress={() => {
-                if (props.layoutState.currentApp === 'FileExplorer') {
-                  props.navigation.replace('FileExplorer')
-                } else {
-                  props.navigation.replace('Photos')
+                if (props.navigation) {
+                  if (props.layoutState.currentApp === 'FileExplorer') {
+                    props.navigation.replace('FileExplorer')
+                  } else {
+                    props.navigation.replace('Photos')
+                  }
                 }
               }}
               style={styles.backTouchable}
@@ -113,17 +131,16 @@ function Storage(props: StorageProps): JSX.Element {
 
             <View style={styles.usedSapceContainer}>
               <Text style={styles.usedSpace}>{strings.screens.storage.space.used.used} </Text>
-              <Text style={[styles.usedSpace, styles.bold]}>{prettysize(usageValues.usage)} </Text>
+              <Text style={[styles.usedSpace, styles.bold]}>{prettysize(usageStorage)} </Text>
               <Text style={styles.usedSpace}>{strings.screens.storage.space.used.of} </Text>
-              <Text style={[styles.usedSpace, styles.bold]}>{putLimitUsage()}</Text>
+              <Text style={[styles.usedSpace, styles.bold]}>{userService.convertLimitUser(limitStorage)}</Text>
             </View>
           </View>
 
           <ProgressBar
-            styleBar={{}}
             styleProgress={{ height: 7 }}
-            totalValue={usageValues.limit}
-            usedValue={usageValues.usage}
+            totalValue={limitStorage}
+            usedValue={usageStorage}
           />
 
           <View style={styles.secondRow}>
@@ -192,7 +209,7 @@ function Storage(props: StorageProps): JSX.Element {
                         {
                           plans && plans.map((plan: IPlan) => <TouchableWithoutFeedback
                             key={plan.id}
-                            onPress={() => props.navigation.replace('StorageWebView', { plan: plan })}
+                            onPress={() => props.navigation && props.navigation.replace('StorageWebView', { plan: plan })}
                           >
                             <PlanCard chosen={true} price={plan.price.toString()} plan={plan} />
                           </TouchableWithoutFeedback>)
