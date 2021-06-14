@@ -19,9 +19,8 @@ import { WaveIndicator } from 'react-native-indicators'
 import Toast from 'react-native-simple-toast'
 import FreeForYouModal from '../../modals/FreeForYouModal';
 import strings from '../../../assets/lang/strings';
-import { deviceStorage } from '../../helpers';
-import * as userService from './../../services/user';
 import { StackNavigationProp } from 'react-navigation-stack/lib/typescript/src/vendor/types';
+import * as fileExplorerService from '../../services/fileExplorer';
 
 interface FileExplorerProps extends Reducers {
   navigation?: StackNavigationProp
@@ -53,40 +52,9 @@ function FileExplorer(props: FileExplorerProps): JSX.Element {
     }
   }
 
-  const refreshLimitStorage = async () => {
-    await deviceStorage.deleteItem('limitDeviceStorage');
-
-    const limit = await userService.loadLimit();
-
-    return deviceStorage.setItem('limitDeviceStorage', limit.toString());
-
-  };
-
   useEffect(() => {
-    refreshLimitStorage();
-    getLyticsData().then(userData => {
-      loadValues().then(res => {
-        const currentPlan = {
-          usage: parseInt(res.usage.toFixed(1)),
-          limit: parseInt(res.limit.toFixed(1)),
-          percentage: parseInt((res.usage / res.limit).toFixed(1))
-        }
-
-        props.dispatch(userActions.setUserStorage(currentPlan))
-        try {
-          if (res) {
-            analytics.identify(userData.uuid, {
-              userId: userData.uuid,
-              email: userData.email,
-              platform: 'mobile',
-              storage_used: currentPlan.usage,
-              storage_limit: currentPlan.limit,
-              storage_usage: currentPlan.percentage
-            }).catch(() => { })
-          }
-        } catch { }
-      })
-    }).catch(() => { })
+    fileExplorerService.refreshLimitStorage().then(limitValue =>
+      fileExplorerService.loadValuesStorage(limitValue.limit, props.dispatch));
   }, [])
 
   // useEffect to trigger uploadFile while app on background
