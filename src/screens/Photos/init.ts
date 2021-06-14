@@ -466,5 +466,5 @@ export async function initUser(): Promise<void> {
 
   const infoUserPhoto = await photosUserData();
 
-  await deviceStorage.saveItem('xPhotos', JSON.stringify(infoUserPhoto))
+  await deviceStorage.setItem('xPhotos', JSON.stringify(infoUserPhoto))
 }

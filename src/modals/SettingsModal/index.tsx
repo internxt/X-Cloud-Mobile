@@ -14,8 +14,10 @@ import strings from '../../../assets/lang/strings';
 import * as userService from './../../services/user';
 import { deviceStorage } from '../../helpers';
 import { StackNavigationProp } from 'react-navigation-stack/lib/typescript/src/vendor/types';
+import * as trackService from './../../services/tracks';
+import { IUser } from '../../helpers/interfaces';
 interface SettingsModalProps {
-  user: userService.User
+  user: IUser
   layoutState: LayoutState
   dispatch: Dispatch,
   navigation: StackNavigationProp
@@ -59,6 +61,10 @@ function SettingsModal(props: SettingsModalProps) {
       checkUsage();
     }
   }, [props.layoutState.showSettingsModal])
+
+  useEffect(()=>{
+    trackService.trackIdentifyPlanName(limitStorage, usageStorage);
+  }, [usageStorage, limitStorage])
 
   // Check current screen to change settings Photos/Drive text
   useEffect(() => {

@@ -44,8 +44,8 @@ function signin(email: string, password: string, sKey: string, twoFactorCode: st
         }
 
         // Store login data
-        await deviceStorage.saveItem('xToken', body.token);
-        await deviceStorage.saveItem('xUser', JSON.stringify(user));
+        await deviceStorage.setItem('xToken', body.token);
+        await deviceStorage.setItem('xUser', JSON.stringify(user));
 
         resolve({ token: body.token, user });
       } else {
@@ -92,8 +92,8 @@ function signinPhotos(email: string, password: string, sKey: string, twoFactorCo
 
         user.mnemonic = user.mnemonic ? decryptTextWithKey(user.mnemonic, password) : null
         // Store login data
-        await deviceStorage.saveItem('xToken', body.token);
-        await deviceStorage.saveItem('xUser', JSON.stringify(user));
+        await deviceStorage.setItem('xToken', body.token);
+        await deviceStorage.setItem('xUser', JSON.stringify(user));
 
         resolve({ token: body.token, user });
       } else {
