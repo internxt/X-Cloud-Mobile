@@ -81,8 +81,7 @@ async function handleClick(props: FileItemProps, setProgress: React.Dispatch<Set
     } catch (error) { }
 
     const xToken = await deviceStorage.getItem('xToken')
-    const xUser = await deviceStorage.getItem('xUser')
-    const xUserJson = JSON.parse(xUser || '{}')
+    const xUserJson = await deviceStorage.getUserStorage();
 
     return RNFetchBlob.config({
       appendExt: props.item.type,

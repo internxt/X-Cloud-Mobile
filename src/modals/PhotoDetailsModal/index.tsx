@@ -36,8 +36,7 @@ async function handleDownload(props: PhotoDetailsProps, setProgress: React.Dispa
   } catch (error) { }
 
   const xToken = await deviceStorage.getItem('xToken')
-  const xUser = await deviceStorage.getItem('xUser')
-  const xUserJson = JSON.parse(xUser || '{}')
+  const xUserJson = await deviceStorage.getUserStorage();
 
   return RNFetchBlob.config({
     appendExt: photoItem.type,

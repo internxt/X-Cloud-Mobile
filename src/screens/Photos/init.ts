@@ -79,9 +79,8 @@ export async function syncPhotos(images: IHashedPhoto[]): Promise<void> {
 }
 
 async function uploadPhoto(photo: IHashedPhoto, last: boolean, onePhotoToUpload: boolean) {
-  const xUser = await deviceStorage.getItem('xUser')
   const xToken = await deviceStorage.getItem('xToken')
-  const xUserJson = JSON.parse(xUser || '{}')
+  const xUserJson = await deviceStorage.getUserStorage();
 
   const headers = {
     'Authorization': `Bearer ${xToken}`,
@@ -142,9 +141,8 @@ async function uploadPhoto(photo: IHashedPhoto, last: boolean, onePhotoToUpload:
 
 const uploadPreview = async (preview: ImageResult, photoId: number, originalPhoto: IHashedPhoto) => {
 
-  const xUser = await deviceStorage.getItem('xUser')
   const xToken = await deviceStorage.getItem('xToken')
-  const xUserJson = JSON.parse(xUser || '{}')
+  const xUserJson = await deviceStorage.getUserStorage();
   const headers = {
     'Authorization': `Bearer ${xToken}`,
     'internxt-mnemonic': xUserJson.mnemonic,
@@ -295,8 +293,7 @@ export async function getLocalPhotosDir(): Promise<string> {
 
 export async function downloadPhoto(photo: any, setProgress: (progress: number) => void) {
   const xToken = await deviceStorage.getItem('xToken')
-  const xUser = await deviceStorage.getItem('xUser')
-  const xUserJson = JSON.parse(xUser || '{}')
+  const xUserJson = await deviceStorage.getUserStorage();
   const type = photo.type.toLowerCase()
 
   const tempDir = await getLocalPhotosDir();
@@ -338,8 +335,7 @@ export async function downloadPreview(preview: any, photo: IApiPhotoWithPreview)
     return Promise.resolve();
   }
   const xToken = await deviceStorage.getItem('xToken')
-  const xUser = await deviceStorage.getItem('xUser')
-  const xUserJson = JSON.parse(xUser || '{}')
+  const xUserJson = await deviceStorage.getUserStorage();
   const typePreview = preview.type
   const name = preview.fileId
 
@@ -415,9 +411,8 @@ export function getPreviews(setPreview: SetStateAction<any>, offset?: number): P
 }
 
 async function initializePhotosUser(): Promise<any> {
-  const xUser = await deviceStorage.getItem('xUser')
   const xToken = await deviceStorage.getItem('xToken')
-  const xUserJson = JSON.parse(xUser || '{}')
+  const xUserJson = await deviceStorage.getUserStorage();
 
   return fetch(`${process.env.REACT_NATIVE_PHOTOS_API_URL}/api/photos/initialize`, {
     method: 'GET',
