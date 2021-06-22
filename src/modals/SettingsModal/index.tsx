@@ -176,13 +176,13 @@ function SettingsModal(props: SettingsModalProps) {
 
       <Separator />
 
-      {<SettingsItem
+      {Platform.OS === 'android' ? <SettingsItem
         text={strings.components.app_menu.settings.storage}
         onPress={() => {
           props.dispatch(layoutActions.closeSettings())
           props.navigation.replace('Storage')
         }}
-      />}
+      /> : <></>}
 
       <SettingsItem
         text={strings.components.app_menu.settings.more}
