@@ -36,7 +36,7 @@ module.exports = {
     'eqeqeq': 'error',
     'comma-spacing': ['error', { 'before': false, 'after': true }],
     'no-trailing-spaces': ['error'],
-    'indent': ['error', 2],
+    'indent': ['error', 2, { 'SwitchCase': 1 }],
     'quotes': ['error', 'single'],
     'object-curly-spacing': ['error', 'always'],
     'newline-after-var': ['error', 'always'],

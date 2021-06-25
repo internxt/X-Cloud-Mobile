@@ -23,6 +23,28 @@ interface AlbumsRepository {
   albumsWithPreviews: PhotoAlbums[]
 }
 
+interface User {
+  bucket: string,
+  createdAt: string,
+  credit: number,
+  email: string,
+  lastname: string,
+  mnemonic: string,
+  name: string,
+  privateKey: string,
+  publicKey: string,
+  registerCompleted: boolean,
+  revocateKey: string,
+  root_folder_id: string,
+  teams: boolean,
+  userId: string,
+  uuid: string
+}
+
+export function getUser(): Promise<User> {
+  return deviceStorage.getItem('xUser').then((maybeUser: string) => JSON.parse(maybeUser || '{}'));
+}
+
 export async function getUserId(): Promise<string> {
   const xUser = await deviceStorage.getItem('xUser');
   const xUserJson = JSON.parse(xUser || '{}');

@@ -13,6 +13,11 @@ import analytics from '../../helpers/lytics';
 import { fileActions, layoutActions, userActions } from '../../redux/actions';
 import MenuItem from '../MenuItem';
 import PackageJson from '../../../package.json'
+import { getUser } from '../../database/DBUtils.ts/utils';
+import { Environment } from '../../inxt-js';
+import { Base64ToUtf8Transform } from '../../inxt-js/lib/base64toUtf8Stream';
+
+import RNFS from 'react-native-fs';
 
 interface AppMenuProps {
   navigation?: any
@@ -39,12 +44,71 @@ function AppMenu(props: AppMenuProps) {
     }
   }
 
-  const uploadFile = (result: any, currentFolder: number | undefined) => {
+  const uploadFile = async (result: any, currentFolder: number | undefined) => {
     props.dispatch(fileActions.uploadFileStart())
 
     const userData = getLyticsData().then((res) => {
       analytics.track('file-upload-start', { userId: res.uuid, email: res.email, device: 'mobile' }).catch(() => { })
     })
+
+    const user = await getUser();
+
+    const regex = /^(.*:\/{0,2})\/?(.*)$/gm
+    const file = result.uri.replace(regex, '$2')
+
+    const env = new Environment({
+      encryptionKey: user.mnemonic,
+      bridgePass: user.userId,
+      bridgeUser: user.email
+    });
+
+    const finalUri = Platform.OS === 'ios' ? RNFetchBlob.wrap(decodeURIComponent(file)) : RNFetchBlob.wrap(result.uri)
+
+    const stream = await RNFetchBlob.fs.readStream(file, 'base64', 4095);
+
+    const base64toUtf8Transformer = new Base64ToUtf8Transform(4096);
+
+    stream.onData((chunk) => {
+      base64toUtf8Transformer.push(chunk);
+    });
+
+    stream.onError((err) => {
+      console.log('STREAM ERR', err);
+    });
+
+    // stream.onEnd(() => {
+    //   console.log
+    // });
+
+
+    console.log('FILESIZE', await RNFS.stat(finalUri));
+    return;
+    stream.open();
+
+    // env.uploadFile(user.bucket, {
+    //   fileSize: ,
+    //   fileContent: base64toUtf8Transformer,
+    //   filename: result.name,
+    //   progressCallback: (progress: number, uploadedBytes: number, totalBytes: number) => {
+    //     props.dispatch(fileActions.uploadFileSetProgress(sent / total, result.id))
+    //     if (sent / total >= 1) { // Once upload is finished (on small files it almost never reaches 100% as it uploads really fast)
+    //       props.dispatch(fileActions.uploadFileSetUri(result.uri)) // Set the uri of the file so FileItem can get it as props
+    //     }
+    //   },
+    //   finishedCallback: (err: Error, res) => {
+    //     console.log('file uplodaded', err);
+    //   }
+    // })
+
+    console.log('ohohohooho')
+
+    console.log(user);
+
+    // new Environment({
+
+    // })
+
+    return;
 
     try {
       // Set name for pics/photos

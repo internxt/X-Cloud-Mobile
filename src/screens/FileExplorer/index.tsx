@@ -19,6 +19,8 @@ import { WaveIndicator } from 'react-native-indicators'
 import Toast from 'react-native-simple-toast'
 import FreeForYouModal from '../../modals/FreeForYouModal';
 import strings from '../../../assets/lang/strings';
+import { Environment } from '../../inxt-js';
+import { getUser } from '../../database/DBUtils.ts/utils';
 
 interface FileExplorerProps extends Reducers {
   navigation?: any
