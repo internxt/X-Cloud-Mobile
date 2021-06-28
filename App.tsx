@@ -11,6 +11,8 @@ import ConnectionDB from './src/database/connection/connection';
 import { getConnectionManager } from 'typeorm/browser';
 import 'reflect-metadata';
 
+process.nextTick = setImmediate;
+
 export default function App(): JSX.Element {
   const [appInitialized, setAppInitialized] = useState(false);
   const [loadError, setLoadError] = useState('');
