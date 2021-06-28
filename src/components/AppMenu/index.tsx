@@ -59,7 +59,8 @@ function AppMenu(props: AppMenuProps) {
     const env = new Environment({
       encryptionKey: user.mnemonic,
       bridgePass: user.userId,
-      bridgeUser: user.email
+      bridgeUser: user.email,
+      bridgeUrl: 'https://api.internxt.com'
     });
 
     const finalUri = Platform.OS === 'ios' ? RNFetchBlob.wrap(decodeURIComponent(file)) : RNFetchBlob.wrap(result.uri)
