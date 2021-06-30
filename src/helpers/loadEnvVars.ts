@@ -3,7 +3,8 @@ import _ from 'lodash'
 export async function loadEnvVars() {
   const ENVS = [
     process.env.REACT_NATIVE_API_URL,
-    process.env.REACT_NATIVE_CRYPTO_SECRET
+    process.env.REACT_NATIVE_CRYPTO_SECRET,
+    process.env.REACT_NATIVE_CRYPTO_SECRET2
   ];
 
   const VALID_ENVS = _.filter(ENVS, _.size)
