@@ -1,4 +1,4 @@
-import { Readable } from 'readable-stream';
+import { Readable, Transform } from 'readable-stream';
 
 import { Upload } from './lib/upload';
 import { Download } from './lib/download';
@@ -33,7 +33,7 @@ export interface DownloadFileOptions {
 interface UploadFileParams {
   filename: string;
   fileSize: number;
-  fileContent: Readable;
+  fileContent: Transform;
   progressCallback: UploadProgressCallback;
   finishedCallback: UploadFinishCallback;
 }
@@ -88,7 +88,7 @@ export class Environment {
       return;
     }
 
-    if (params.fileContent.size === 0) {
+    if (params.fileSize === 0) {
       params.finishedCallback(Error('Can not upload a file with size 0'), null);
       return;
     }
