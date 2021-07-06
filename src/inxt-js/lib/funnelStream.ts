@@ -1,92 +1,88 @@
 import { Transform } from 'readable-stream';
 
-export class FunnelStream extends Transform {
-    private limit: number;
+type ErrorEvent = 'error';
+type ErrorListener = (err: Error) => void;
+type onErrorListener = (event: ErrorEvent, listener: ErrorListener) => void;
 
-    private buffer: Buffer;
-    private bufferOffset = 0;
-    private lastChunkLength = 0;
+type DataEvent = 'data';
+type DataListener = (chunk: Buffer) => void;
+type onDataListener = (event: DataEvent, listener: DataListener) => void;
 
-    constructor(limit = 1) {
-      super();
-      this.limit = limit;
-      this.buffer = Buffer.alloc(limit);
+type EndEvent = 'end';
+type EndListener = (err?: Error) => void;
+type onEndListener = (event: EndEvent, listener: EndListener) => void;
+
+type StreamEvent = ErrorEvent | DataEvent | EndEvent;
+type StreamListener = ErrorListener & DataListener & EndListener;
+type onListener = onDataListener & onEndListener & onErrorListener;
+
+export class FunnelStream {
+  public limit: number;
+
+  private internalBuffer: Buffer;
+  private internalBufferOffset = 0;
+  private target: Transform;
+
+  private listeners: Map<StreamEvent, StreamListener[]> = new Map<StreamEvent, StreamListener[]>();
+
+  constructor(limit = 1) {
+    this.internalBuffer = Buffer.alloc(limit);
+
+    this.listeners.set('end', []);
+    this.listeners.set('data', []);
+    this.listeners.set('error', []);
+  }
+
+  on: onListener = (event, listener) => {
+    this.listeners.get(event).push(listener);
+  }
+
+  pipe(target: Transform): Transform {
+    this.target = target;
+
+    return this.target;
+  }
+
+  emit(event: StreamEvent, content: any): void {
+    this.listeners.get(event).forEach((fn) => { fn(content) });
+  }
+
+  push(data: Buffer): void {
+    if (!data) { return; }
+
+    if (!this.target) {
+      this.listeners.get('error').forEach((fn) => {
+        fn(Error('Target not set, call pipe() before push()'));
+      });
     }
 
-    private bufferStillHasData(): boolean {
-      return this.bufferOffset !== 0;
+    let remainingBytes = data.length;
+
+    while (remainingBytes > this.internalBuffer.length - this.internalBufferOffset) {
+      data.copy(this.internalBuffer, this.internalBufferOffset, 0, this.internalBuffer.length - this.internalBufferOffset);
+      data = data.slice(this.internalBuffer.length - this.internalBufferOffset);
+
+      this.target.push(this.internalBuffer)
+
+      this.listeners.get('data').forEach((fn) => { fn(this.internalBuffer) });
+
+      remainingBytes -= this.internalBuffer.length - this.internalBufferOffset;
+      this.internalBufferOffset = 0;
     }
 
-    private bufferIsEmpty(): boolean {
-      return this.bufferOffset === 0;
+    data.copy(this.internalBuffer, this.internalBufferOffset);
+    this.internalBufferOffset += data.length;
+  }
+
+  end(): void {
+    if (!this.target) {
+      this.listeners.get('error').forEach((fn) => {
+        fn(Error('Target not set, call pipe() before end()'));
+      });
     }
-
-    private pushToReadable(b: Buffer): void {
-      this.push(b);
+    if (this.internalBufferOffset > 0) {
+      this.push(this.internalBuffer.slice(0, this.internalBufferOffset));
     }
-
-    private pushBuffer(): void {
-      this.pushToReadable(this.buffer);
-    }
-
-    _transform(chunk: Buffer, enc: string, done: (err: Error | null) => void): void {
-      if (this.bufferStillHasData()) {
-        const bytesToPush = (this.limit - this.bufferOffset);
-
-        const enoughToFillBuffer = () => chunk.length >= bytesToPush;
-        const completeBuffer = () => chunk.copy(this.buffer, this.bufferOffset, 0, bytesToPush);
-        const addToBuffer = () => chunk.copy(this.buffer, this.bufferOffset);
-        const resetOffset = () => this.bufferOffset = 0;
-        const incrementOffset = (increment: number) => this.bufferOffset += increment;
-
-        if (enoughToFillBuffer()) {
-          completeBuffer();
-
-          this.pushBuffer();
-
-          resetOffset();
-          chunk = chunk.slice(0, chunk.length - bytesToPush);
-        } else {
-          addToBuffer();
-          incrementOffset(chunk.length);
-        }
-      }
-
-      const pushChunks = (chunk: Buffer): Buffer => {
-        let offset = 0;
-        let chunkSize = chunk.length;
-
-        const notIteratedEntireBuffer = () => chunkSize >= this.limit;
-
-        while (notIteratedEntireBuffer()) {
-          this.pushToReadable(chunk.slice(offset, offset + this.limit));
-
-          offset += this.limit;
-          chunkSize -= this.limit;
-        }
-
-        return chunk.slice(offset, offset + chunkSize);
-      };
-
-      if (this.bufferIsEmpty()) {
-        const remainingChunk = pushChunks(chunk);
-
-        if (remainingChunk.length) {
-          // save remaining chunk for the next event
-          remainingChunk.copy(this.buffer);
-
-          this.lastChunkLength = remainingChunk.byteLength;
-          this.bufferOffset += remainingChunk.length;
-        }
-      }
-
-      done(null);
-    }
-
-    _flush(done: () => void): void {
-      if (this.bufferStillHasData()) {
-        this.pushToReadable(this.buffer.slice(0, this.lastChunkLength));
-      }
-      done();
-    }
+    this.target.push(null);
+  }
 }
