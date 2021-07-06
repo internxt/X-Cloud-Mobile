@@ -1,6 +1,6 @@
 import { Environment } from '../inxt-js';
 import { createHash } from 'react-native-crypto';
-import { Readable } from 'readable-stream';
+import { Transform } from 'readable-stream';
 
 import { getUser } from '../database/DBUtils.ts/utils';
 import RNFetchBlob from 'rn-fetch-blob';
@@ -11,7 +11,7 @@ type ProgressCallback = (progress: number, uploadedBytes: number | null, totalBy
 interface IUploadParams {
   filesize: number,
   filepath: string,
-  filecontent: Readable,
+  filecontent: Transform,
   progressCallback: ProgressCallback;
 }
 
