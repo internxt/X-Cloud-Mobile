@@ -76,7 +76,7 @@ function uploadFileFinished(name: string) {
   return { type: fileActionTypes.ADD_FILE_SUCCESS, payload: name };
 }
 
-function uploadFileFailed(id: number) {
+function uploadFileFailed(id: string) {
   return { type: fileActionTypes.ADD_FILE_FAILURE, payload: id };
 }
 
@@ -310,6 +310,6 @@ function updateFolderMetadata(metadata: any, folderId) {
   }
 }
 
-function updateUploadingFile(id: number) {
+function updateUploadingFile(id: string) {
   return { type: fileActionTypes.UPDATE_UPLOADING_FILE, payload: id };
 }

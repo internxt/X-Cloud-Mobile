@@ -6,7 +6,3 @@ export interface IFileToUpload extends DocumentPickerResponse {
   createdAt?: Date
   id?: string
 }
-
-export interface IFilesToUpload {
-  [name: string]: IFileToUpload
-}

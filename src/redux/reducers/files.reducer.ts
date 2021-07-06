@@ -78,10 +78,15 @@ export function filesReducer(state = initialState, action: any): FilesState {
       ...state,
       filesCurrentlyUploading: [...state.filesCurrentlyUploading, action.payload]
     };
-  case fileActionTypes.REMOVE_UPLOADING_FILE:
+  case fileActionTypes.ADD_UPLOADED_FILE:
     return {
       ...state,
       filesAlreadyUploaded: [...state.filesAlreadyUploaded, state.filesCurrentlyUploading.find(file => file.id === action.payload)],
+      filesCurrentlyUploading: state.filesCurrentlyUploading.filter(file => file.id !== action.payload)
+    };
+  case fileActionTypes.REMOVE_UPLOADING_FILE:
+    return {
+      ...state,
       filesCurrentlyUploading: state.filesCurrentlyUploading.filter(file => file.id !== action.payload)
     };
   case fileActionTypes.REMOVE_UPLOADED_FILE:
@@ -102,8 +107,7 @@ export function filesReducer(state = initialState, action: any): FilesState {
       ...state,
       loading: false,
       error: action.error,
-      isUploading: false,
-      filesCurrentlyUploading: state.filesCurrentlyUploading.filter(file => file.id !== action.payload)
+      isUploading: false
     };
 
   case fileActionTypes.ADD_FILE_UPLOAD_PROGRESS:

@@ -113,8 +113,7 @@ function FileList(props: any) {
 
       {
         filesUploading.length > 0 ?
-          filesUploading.map((file: IUploadingFile) =>
-          {
+          filesUploading.map((file: IUploadingFile) => {
             return file.currentFolder === folderId ?
               <FileItem
                 key={filesUploading.indexOf(file)}
@@ -151,8 +150,7 @@ function FileList(props: any) {
       }
 
       {
-        filesUploaded.map((file: any) =>
-        {
+        filesUploaded.map((file: any) => {
           return file.currentFolder === folderId ?
             <FileItem
               key={file.id}
