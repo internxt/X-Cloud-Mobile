@@ -81,8 +81,8 @@ export function filesReducer(state = initialState, action: any): FilesState {
   case fileActionTypes.ADD_UPLOADED_FILE:
     return {
       ...state,
-      filesAlreadyUploaded: [...state.filesAlreadyUploaded, state.filesCurrentlyUploading.find(file => file.id === action.payload)],
-      filesCurrentlyUploading: state.filesCurrentlyUploading.filter(file => file.id !== action.payload)
+      filesAlreadyUploaded: [...state.filesAlreadyUploaded, state.filesCurrentlyUploading.find(file => file.id === action.payload)]
+      //filesCurrentlyUploading: state.filesCurrentlyUploading.filter(file => file.id !== action.payload)
     };
   case fileActionTypes.REMOVE_UPLOADING_FILE:
     return {

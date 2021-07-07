@@ -66,9 +66,8 @@ function AppMenu(props: AppMenuProps) {
         'internxt-client': 'drive-mobile'
       };
 
-      const regex = /^(.*:\/{0,2})\/?(.*)$/gm
-      const file = result.uri.replace(regex, '$2')
-
+      const regex = /^(.*:\/{0,2})/gm
+      const file = result.uri.replace(regex, '')
       const finalUri = Platform.OS === 'ios' ? RNFetchBlob.wrap(decodeURIComponent(file)) : RNFetchBlob.wrap(result.uri)
 
       await RNFetchBlob.config({ timeout: NEWTORK_TIMEOUT }).fetch('POST', `${process.env.REACT_NATIVE_API_URL}/api/storage/folder/${currentFolder}/upload`, headers,
@@ -84,10 +83,10 @@ function AppMenu(props: AppMenuProps) {
         })
         .then((res) => {
           if (res.respInfo.status !== 201) {
-            props.dispatch(fileActions.removeUploadingFile(result.id))
             throw new Error('Error uploading file, server status response: ' + res.respInfo.status)
           }
           props.dispatch(fileActions.addUploadedFile(result.id))
+          props.dispatch(fileActions.removeUploadingFile(result.id))
           props.dispatch(fileActions.updateUploadingFile(result.id))
           props.dispatch(fileActions.uploadFileSetUri(undefined))
           analytics.track('file-upload-finished', { userId: userData.uuid, email: userData.email, device: 'mobile' }).catch(() => { })
@@ -95,6 +94,7 @@ function AppMenu(props: AppMenuProps) {
           props.dispatch(fileActions.uploadFileFinished(result.name))
         })
         .catch((err) => {
+          props.dispatch(fileActions.removeUploadingFile(result.id))
           if (err.status === 401) {
             props.dispatch(userActions.signout())
           }
@@ -191,21 +191,16 @@ function AppMenu(props: AppMenuProps) {
                       createdAt: new Date(),
                       id: uniqueId()
                     }))
-                    const chunks: [() => Promise<void>][] = []
+                    const chunks: (() => Promise<void>)[][] = []
 
                     files.forEach(file => props.dispatch(fileActions.addUploadingFile(file)))
                     const loop = () => {
-                      const reset = (count: number, currentTotalSize: number, filesChunk: Promise<void>[]) => {
-                        count = 0
-                        currentTotalSize = 0
-                        filesChunk.length = 0
-                      }
-                      const MAX_FILE_SIZE_IN_MB = 1
+                      const MAX_FILE_SIZE_IN_MB = 10
                       const MAX_UPLOADABLE_SIZE = 1024 * 1024 * MAX_FILE_SIZE_IN_MB
-                      const filesChunk: [() => Promise<void>[]] = []
                       let currentTotalSize = 0
                       let count = 0
                       const iterables = files.length
+                      const filesChunk: (() => Promise<void>)[] = []
 
                       for (const asset of files) {
                         count++
@@ -214,7 +209,19 @@ function AppMenu(props: AppMenuProps) {
                           chunks.push([() => uploadFile(asset, asset.currentFolder)])
                           files = files.filter(file => file !== asset)
                           if (count === iterables && files.length > 0) {
-                            reset(count, currentTotalSize, filesChunk)
+                            chunks.push(filesChunk)
+                            loop()
+                            break
+                          }
+
+                          continue
+                        }
+
+                        const hipoteticalSize = currentTotalSize + asset.size
+
+                        if (hipoteticalSize >= MAX_UPLOADABLE_SIZE) {
+                          if (count === iterables && files.length > 0) {
+                            chunks.push(filesChunk)
                             loop()
                             break
                           }
@@ -222,30 +229,22 @@ function AppMenu(props: AppMenuProps) {
                           continue
                         }
                         currentTotalSize += asset.size
-                        if (currentTotalSize >= MAX_UPLOADABLE_SIZE) {
-                          if (count === iterables && files.length > 0) {
-                            reset(count, currentTotalSize, filesChunk)
-                            loop()
-                            break
-                          }
-
-                          continue
-                        }
                         filesChunk.push(() => uploadFile(asset, asset.currentFolder))
                         files = files.filter(file => file !== asset)
-
                         if (count === iterables && files.length > 0) {
                           chunks.push(filesChunk)
-                          reset(count, currentTotalSize, filesChunk)
                           loop()
                           break
+                        }
+                        if (files.length === 0) {
+                          chunks.push(filesChunk)
                         }
                       }
                     }
 
                     loop()
                     for (const chunk of chunks) {
-                      await allSettled(chunk.map(async task => task()))
+                      await allSettled(chunk.map(task => task()))
                     }
                   }
                 },
